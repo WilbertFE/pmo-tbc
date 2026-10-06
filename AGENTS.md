@@ -14,12 +14,14 @@ Project: a web app that helps tuberculosis (TBC) patients and their PMO do daily
 
 ## 1. Session start: identify the developer (gatekeeping)
 
-Before doing the **first task of a new session**, ask exactly once:
+Before doing the **first task of a new session**, ask these two questions exactly once, together in one message:
 
 > Siapa yang sedang coding sekarang?
 > 1. Kapten (Wilbert): backend bersama, database, integrasi
 > 2. Programmer 2: aplikasi pasien
 > 3. Programmer 3: dashboard nakes
+>
+> Mau saya tarik kode terbaru dari GitHub dulu? (ya/tidak)
 
 Rules:
 
@@ -27,6 +29,21 @@ Rules:
 - Ask only once per session. Before asking, check the conversation history; if it was already answered, use the existing answer.
 - Remember the answer for the rest of the session and apply the scope rules below.
 - Reading any file is always allowed. The scope rules only limit **writing and editing**.
+- Skip the sync question if the user already said they pulled, or said not to.
+
+### Syncing with the latest code
+
+If the user answers yes:
+
+1. Run `git status`. If there are uncommitted changes, stop and ask whether to commit them or `git stash` them first. Never discard the user's changes.
+2. Run `git fetch origin`.
+3. On `main`: run `git pull`.
+4. On another branch: run `git merge origin/main` to bring the latest `main` into the branch. Use merge, not rebase (rebase needs a force push, which is blocked).
+5. If there is a merge conflict, stop. List the conflicting files and whose area they belong to, and help resolve them only after the user confirms.
+6. If `package.json` or `package-lock.json` changed, run `npm install`.
+7. Briefly report what came in (for example the new commits from `git log --oneline`), then continue with the task.
+
+Never run `git reset --hard`, `git push --force`, or `git checkout -- .` as part of syncing.
 
 ### Scope per developer
 

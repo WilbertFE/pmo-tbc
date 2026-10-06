@@ -1,0 +1,1 @@
+alter publication supabase_realtime add table checkin, efek_samping;

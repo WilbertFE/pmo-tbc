@@ -10,7 +10,11 @@ values (
   52428800, -- 50 MB
   array['video/webm', 'video/mp4', 'video/quicktime', 'image/jpeg', 'image/png', 'image/webp']
 )
-on conflict (id) do nothing;
+-- Kalau bucket sudah dibuat manual dari dashboard, samakan pengaturannya
+on conflict (id) do update set
+  public = false,
+  file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
 
 -- Ambil pasien_id dari folder pertama path, null kalau bukan uuid
 create or replace function public.pasien_id_dari_path(p_name text)

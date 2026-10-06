@@ -264,3 +264,5 @@ git push -u origin HEAD
 ```
 
 After pushing, tell the user the branch is ready and remind them to open a pull request for review. Do not merge pull requests yourself.
+
+- Never run `npm audit fix --force`. Ask the user before changing major versions of any dependency.

@@ -75,6 +75,32 @@ Buka `http://localhost:3000`. Aplikasi pasien ada di `/pasien`, dashboard nakes 
 
 Jangan pernah commit `.env.local`.
 
+**Database (khusus Kapten)**
+
+Jalankan file di `supabase/migrations/` secara berurutan (001 sampai 005) di SQL Editor Supabase, lalu `supabase/seed.sql` untuk data demo. Seed hanya untuk database development.
+
+**Akun demo** (password semua: `demo1234`)
+
+| Email | Peran | Kondisi |
+| --- | --- | --- |
+| `nakes@demo.id` | nakes | Menangani ketiga pasien di bawah |
+| `budi@demo.id` | pasien | Rutin check-in (hijau) |
+| `ani@demo.id` | pmo | PMO untuk Pak Budi |
+| `wati@demo.id` | pasien | 2 hari tidak check-in (merah) |
+| `joko@demo.id` | pasien | Efek samping sedang (kuning) |
+
+**Helper bersama di `src/lib/`** (pakai ini, jangan buat ulang)
+
+| File | Isi |
+| --- | --- |
+| `supabase/client.ts`, `supabase/server.ts` | Client Supabase untuk browser dan server |
+| `supabase/database.types.ts` | Tipe tabel, contoh `Tables<"checkin">` |
+| `auth.ts` | `getProfilSaatIni()`, `getPasienSaya()` untuk Server Components |
+| `tanggal.ts` | `tanggalWIB()`, `jamWIB()`, `selisihHari()`, `tambahHari()`, `waktuWIB()` |
+| `progres.ts` | `hitungProgres()` untuk "Hari ke-47 dari 180" |
+
+Logout: `<form action="/api/auth/logout" method="post">` dengan tombol submit.
+
 ## Struktur folder dan penanggung jawab
 
 ```

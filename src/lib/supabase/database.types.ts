@@ -194,7 +194,19 @@ export type Database = {
       };
     };
     Views: { [_ in never]: never };
-    Functions: { [_ in never]: never };
+    Functions: {
+      // Migrasi 007: nakes menghubungkan akun pasien (dan opsional PMO) berdasarkan email
+      hubungkan_pasien: {
+        Args: {
+          p_email: string;
+          p_tanggal_mulai: string;
+          p_jam_minum: string;
+          p_durasi_hari?: number;
+          p_email_pmo?: string | null;
+        };
+        Returns: string;
+      };
+    };
     Enums: { [_ in never]: never };
     CompositeTypes: { [_ in never]: never };
   };

@@ -147,15 +147,26 @@ Desktop 1440 x 1024, dibagi dua kolom:
 - **Kiri:** foto tenaga kesehatan, dengan kartu putih berisi judul dan deskripsi di bagian bawah.
 - **Kanan:** "Masuk ke Akun Anda" (Heading H2), "Belum mempunyai akun? Daftar", tombol "Masuk dengan Google", pemisah "Atau dengan Email", input Email dan Sandi, tombol utama.
 
-**Yang berbeda dari aplikasi:**
-- Akun dibuat oleh admin, tidak ada pendaftaran mandiri dan tidak ada login Google (peran diambil dari `app_metadata`, supaya orang tidak bisa mendaftar sebagai nakes). Hapus "Daftar" dan "Masuk dengan Google", atau ganti dengan teks "Belum punya akun? Hubungi petugas puskesmas".
-- Tombol utama di desain bertuliskan "Daftar". Seharusnya "Masuk".
-- Di ponsel, sembunyikan foto dan tampilkan form satu kolom.
-- Kode yang sudah ada: `src/app/login/`.
+**Status:** sudah dibuat sesuai desain di `src/app/login/`, dengan komponen bersama di `src/components/auth/` (branch `feat/auth-production`).
+
+**Keputusan yang berbeda dari desain:**
+- "Masuk dengan Google" dan link "Daftar" **dipakai**. Login Google memakai provider bawaan Supabase, bukan library auth lain, karena RLS bergantung pada `auth.uid()` Supabase.
+- Tombol utama bertuliskan "Masuk", bukan "Daftar" seperti di desain.
+- Teks kartu foto diganti: "Teman Setia Selama Pengobatan".
+- Di ponsel, foto disembunyikan dan form tampil satu kolom.
+- Ikon input memakai `lucide-react` (Mail, LockKeyhole, Eye), bukan ikon vuesax dari Figma.
 
 ### Daftar: [`auth-02-daftar.png`](auth-02-daftar.png)
 
-Form Nama, Email, Kata Sandi, Konfirmasi Kata Sandi. **Tidak dipakai** di MVP (lihat poin Login di atas).
+Form Nama, Email, Kata Sandi, Konfirmasi Kata Sandi, ditambah tombol Google.
+
+**Status:** sudah dibuat sesuai desain di `src/app/daftar/`.
+
+**Alur dan aturan:**
+- Pendaftaran mandiri (form atau Google) **selalu** menjadi peran `pasien`. Peran diambil dari `app_metadata` yang tidak bisa diisi pengguna, jadi tidak ada yang bisa mendaftar sebagai nakes.
+- Kalau "Confirm email" aktif di Supabase, pendaftar menerima email konfirmasi dulu.
+- Akun baru diarahkan ke `/menunggu-verifikasi` (tidak ada di Figma, dibuat mengikuti gaya yang sama) sampai nakes menghubungkannya ke data pengobatan lewat tombol **Tambah Pasien** di dashboard. Akun PMO juga mendaftar dulu, lalu ditunjuk sebagai PMO lewat form yang sama.
+- Teks kartu foto diganti: "Mulai Langkah Pertama Anda".
 
 ### Landing page: [`landing-01.png`](landing-01.png)
 
@@ -220,7 +231,7 @@ Elemen berikut berasal dari template lain dan **tidak boleh** muncul di aplikasi
 | Dashboard | "Assign Room", "Room Type", "Room Number", "Est. Check-Out", "Deluxe", menu "Order" dan "Customer" |
 | Dashboard mobile | "Guest Name", "Occupancy Rate", "Guests per Day" |
 | Footer (landing, check-in) | Logo "Tirai.id", menu Produk, Custom, Blog, alamat kantor di Malang dan Surabaya, "loremipsum@gmail.com" |
-| Kartu foto login dan daftar | Teks tentang tirai, "Tirai.id", "Acara Asean Panji" |
+| Kartu foto login dan daftar | Teks tentang tirai, "Tirai.id", "Acara Asean Panji" (sudah diganti di kode) |
 | Landing | Tombol bertuliskan "Button" dengan ikon placeholder |
 
 Ingat juga aturan privasi: teks yang bisa dilihat orang lain (judul tab, notifikasi, hero) **tidak boleh** menyebut "TBC" atau "tuberkulosis".

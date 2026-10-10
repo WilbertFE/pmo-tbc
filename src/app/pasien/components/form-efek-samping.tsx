@@ -29,7 +29,7 @@ export default function FormEfekSamping() {
     setPesan(null);
 
     try {
-      const response = await fetch("/api/efek-samping", {
+      const response = await fetch("/api/pasien/efek-samping", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -100,6 +100,8 @@ src/
     └── ...                   → utilities and helpers (dates, status logic)
 supabase/
 └── migrations/               → SQL schema, numbered files
+docs/
+└── design/                   → design reference from Figma (README.md + screen images)
 ```
 
 Rules:
@@ -109,6 +111,7 @@ Rules:
 - Install and build components with shadcn first. Check `src/components/ui/` before creating a new component.
 - Always use Tailwind CSS for styling. No CSS modules, no inline style objects unless unavoidable.
 - When changing the UI, use the frontend design skill if your tool provides one.
+- **Before any UI work, read `docs/design/README.md`.** It has the exact colors, typography, spacing, component styles, and a description plus image of every screen from Figma, so you do not need Figma access. It also lists template leftovers that must not be copied.
 
 ---
 
@@ -216,6 +219,7 @@ New schema changes: always a **new** numbered migration file (`003_...sql`), nev
 **Design**
 - Patient app: mobile-first, large buttons, minimal text, one main action per screen. Users may be elderly or not used to technology.
 - Nakes dashboard: desktop-first, information-dense, status colors easy to scan.
+- Visual style follows `docs/design/README.md` (primary green `#095c44`, General Sans, 12 px radius). If the design conflicts with the flows, roles, data, or privacy rules in this file, follow this file.
 
 ---
 

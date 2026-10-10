@@ -3,7 +3,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Users, AlertTriangle, AlertCircle, CheckCircle2, RotateCw, LogOut } from "lucide-react";
+import { Users, AlertTriangle, AlertCircle, CheckCircle2, RotateCw, LogOut, UserPlus } from "lucide-react";
 import type { RingkasanDashboard } from "./types";
 
 interface HeaderNakesProps {
@@ -13,6 +13,7 @@ interface HeaderNakesProps {
   isLoading: boolean;
   filterAktif: string;
   onPilihFilter: (filter: string) => void;
+  onTambahPasien: () => void;
 }
 
 export function HeaderNakes({
@@ -22,6 +23,7 @@ export function HeaderNakes({
   isLoading,
   filterAktif,
   onPilihFilter,
+  onTambahPasien,
 }: HeaderNakesProps) {
   return (
     <header className="space-y-4">
@@ -43,6 +45,10 @@ export function HeaderNakes({
         </div>
 
         <div className="flex items-center gap-2">
+          <Button size="sm" onClick={onTambahPasien} className="flex items-center gap-1.5">
+            <UserPlus className="size-4" />
+            Tambah Pasien
+          </Button>
           <Button
             variant="outline"
             size="sm"

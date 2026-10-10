@@ -7,6 +7,7 @@ import { FilterPasien } from "./FilterPasien";
 import { TabelPasienNakes } from "./TabelPasienNakes";
 import { ModalVerifikasi } from "./ModalVerifikasi";
 import { ModalTindakLanjut } from "./ModalTindakLanjut";
+import { ModalTambahPasien } from "./ModalTambahPasien";
 import type { PasienNakes, RingkasanDashboard } from "./types";
 import { AlertCircle, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,7 @@ export function DashboardNakesClient() {
   // Modal State
   const [pasienVerifikasi, setPasienVerifikasi] = useState<PasienNakes | null>(null);
   const [pasienTindakLanjut, setPasienTindakLanjut] = useState<PasienNakes | null>(null);
+  const [tambahPasienTerbuka, setTambahPasienTerbuka] = useState(false);
 
   // Fungsi Fetch Data Pasien untuk tombol refresh dan realtime
   const muatData = useCallback(async () => {
@@ -160,6 +162,7 @@ export function DashboardNakesClient() {
           isLoading={isLoading}
           filterAktif={filterStatus}
           onPilihFilter={setFilterStatus}
+          onTambahPasien={() => setTambahPasienTerbuka(true)}
         />
 
         {/* Notifikasi Error jika ada */}
@@ -208,6 +211,14 @@ export function DashboardNakesClient() {
           pasien={pasienVerifikasi}
           onClose={() => setPasienVerifikasi(null)}
           onSuksesVerifikasi={muatData}
+        />
+      )}
+
+      {/* Modal Dialog Tambah Pasien */}
+      {tambahPasienTerbuka && (
+        <ModalTambahPasien
+          onClose={() => setTambahPasienTerbuka(false)}
+          onSuksesTambah={muatData}
         />
       )}
 

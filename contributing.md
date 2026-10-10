@@ -279,7 +279,7 @@ Cara mencegah conflict: pull `main` setiap hari, buat PR kecil, dan bekerja di f
 ## 8. Kerja dengan AI agent (vibecoding)
 
 1. Sebelum membuka AI agent, jalankan rutinitas harian (bagian 2.1) dan buat branch.
-2. Di awal sesi, sebutkan siapa kamu, misalnya: "Saya Programmer 2, mau mengerjakan issue #12."
+2. Di awal sesi, sebutkan siapa kamu, misalnya: "Saya Programmer 2, mau mengerjakan issue #12." Agent juga akan menawarkan untuk menarik kode terbaru dari GitHub. Jawab "ya" kalau kamu belum menjalankan rutinitas harian.
 3. Rujuk desain kalau ada: "Buat sesuai `docs/design/pasien-02-checkin.png`."
 4. Sebelum membuka PR, **baca dulu perubahan yang dibuat AI** di tab Source Control VS Code. Kamu tetap bertanggung jawab atas kode yang kamu kirim.
 5. AI boleh commit dan push ke branch, tapi **PR dibuka dan di-merge oleh manusia**.

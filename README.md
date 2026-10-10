@@ -77,7 +77,7 @@ Jangan pernah commit `.env.local`.
 
 **Database (khusus Kapten)**
 
-Jalankan file di `supabase/migrations/` secara berurutan (001 sampai 006) di SQL Editor Supabase, lalu `supabase/seed.sql` untuk data demo. Seed hanya untuk database development.
+Jalankan file di `supabase/migrations/` secara berurutan (001 sampai 007) di SQL Editor Supabase, lalu `supabase/seed.sql` untuk data demo. Seed hanya untuk database development.
 
 **Login Google dan pendaftaran (khusus Kapten, sekali saja)**
 
@@ -93,13 +93,7 @@ Pendaftaran mandiri (form `/daftar` atau Google) selalu menjadi peran `pasien`. 
    - Redirect URLs: `http://localhost:3000/api/auth/callback` dan `https://pmo-tbc.vercel.app/api/auth/callback`.
 4. (Opsional) Authentication, Sign In / Providers, Email: matikan **Confirm email** kalau tidak ingin pendaftar membuka email konfirmasi dulu. Email bawaan Supabase dibatasi beberapa email per jam, jadi untuk demo sebaiknya dimatikan atau pakai SMTP sendiri.
 
-Menghubungkan akun baru ke data pengobatan (sementara, lewat SQL Editor sampai ada fitur di dashboard nakes):
-
-```sql
-insert into public.pasien (profile_id, nakes_id, tanggal_mulai, jam_minum)
-select u.id, '<id nakes>', '2026-10-10', '07:00'
-from auth.users u where u.email = '<email pasien>';
-```
+Menghubungkan akun baru ke data pengobatan: nakes membuka dashboard `/nakes`, klik **Tambah Pasien**, isi email pasien (dan opsional email PMO), tanggal mulai, jam minum, dan durasi. Pasien dan PMO harus sudah mendaftar dulu. Akun PMO otomatis berubah peran menjadi `pmo`. Fitur ini butuh migrasi `007_hubungkan_pasien.sql`.
 
 **Akun demo** (password semua: `demo1234`)
 

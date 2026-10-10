@@ -18,6 +18,9 @@ export async function login(_state: LoginState, formData: FormData): Promise<Log
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error || !data.user) {
+    if (error?.code === "email_not_confirmed") {
+      return { error: "Email belum dikonfirmasi. Buka tautan yang kami kirim ke email Anda." };
+    }
     return { error: "Email atau kata sandi salah." };
   }
 
@@ -32,5 +35,6 @@ export async function login(_state: LoginState, formData: FormData): Promise<Log
     return { error: "Akun belum terdaftar. Hubungi petugas puskesmas." };
   }
 
+  // Pasien yang belum dihubungkan nakes akan diarahkan proxy ke /menunggu-verifikasi
   redirect(halamanUtama(profil.peran));
 }

@@ -148,6 +148,8 @@ Rules:
 
 After login: `pasien` and `pmo` go to `/pasien`, `nakes` goes to `/nakes`.
 
+Self sign-up (`/daftar` form or Google, both through Supabase Auth) always creates a `pasien` profile; the role comes from `app_metadata`, which users cannot set. Until a nakes links the account to a row in `pasien`, `src/proxy.ts` sends the user to `/menunggu-verifikasi`. Do not add another auth library (for example Better Auth or NextAuth): RLS depends on Supabase's `auth.uid()`.
+
 ### Main flows
 
 **Daily check-in (patient app)**

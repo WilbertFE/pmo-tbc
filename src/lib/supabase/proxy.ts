@@ -41,14 +41,16 @@ export async function updateSession(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const diAreaPasien = path.startsWith("/pasien");
   const diAreaNakes = path.startsWith("/nakes");
-  const diLogin = path.startsWith("/login");
+  const diMenunggu = path.startsWith("/menunggu-verifikasi");
+  // Halaman untuk tamu: yang sudah login diarahkan ke halaman utamanya
+  const diHalamanTamu = path.startsWith("/login") || path.startsWith("/daftar");
 
-  if (!diAreaPasien && !diAreaNakes && !diLogin) {
+  if (!diAreaPasien && !diAreaNakes && !diMenunggu && !diHalamanTamu) {
     return response;
   }
 
   if (!userId) {
-    return diLogin ? response : alihkan(request, response, "/login");
+    return diHalamanTamu ? response : alihkan(request, response, "/login");
   }
 
   const { data: profil } = await supabase
@@ -57,18 +59,26 @@ export async function updateSession(request: NextRequest) {
     .eq("id", userId)
     .single();
 
-  // Login berhasil tapi belum punya profil: biarkan di halaman login
+  // Login berhasil tapi belum punya profil: biarkan di halaman tamu
   if (!profil) {
-    return diLogin ? response : alihkan(request, response, "/login");
+    return diHalamanTamu ? response : alihkan(request, response, "/login");
   }
 
-  const tujuan = halamanUtama(profil.peran);
-  const salahArea =
-    diLogin ||
-    (diAreaNakes && profil.peran !== "nakes") ||
-    (diAreaPasien && profil.peran === "nakes");
+  if (profil.peran === "nakes") {
+    return diAreaNakes ? response : alihkan(request, response, "/nakes");
+  }
 
-  return salahArea ? alihkan(request, response, tujuan) : response;
+  // Pasien atau PMO: harus sudah dihubungkan nakes ke baris pasien sebelum bisa memakai /pasien.
+  // Kalau belum, arahkan ke /menunggu-verifikasi. Kalau sudah, ke /pasien.
+  const { data: pasien } = await supabase
+    .from("pasien")
+    .select("id")
+    .or(`profile_id.eq.${userId},pmo_id.eq.${userId}`)
+    .limit(1)
+    .maybeSingle();
+
+  const tujuan = pasien ? halamanUtama(profil.peran) : "/menunggu-verifikasi";
+  return path.startsWith(tujuan) ? response : alihkan(request, response, tujuan);
 }
 
 // Redirect sambil membawa cookie session yang mungkin baru di-refresh

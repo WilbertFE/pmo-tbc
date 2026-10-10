@@ -77,7 +77,29 @@ Jangan pernah commit `.env.local`.
 
 **Database (khusus Kapten)**
 
-Jalankan file di `supabase/migrations/` secara berurutan (001 sampai 005) di SQL Editor Supabase, lalu `supabase/seed.sql` untuk data demo. Seed hanya untuk database development.
+Jalankan file di `supabase/migrations/` secara berurutan (001 sampai 006) di SQL Editor Supabase, lalu `supabase/seed.sql` untuk data demo. Seed hanya untuk database development.
+
+**Login Google dan pendaftaran (khusus Kapten, sekali saja)**
+
+Pendaftaran mandiri (form `/daftar` atau Google) selalu menjadi peran `pasien`. Akun baru diarahkan ke `/menunggu-verifikasi` sampai nakes menghubungkannya ke baris di tabel `pasien`.
+
+1. Google Cloud Console, menu APIs & Services:
+   - OAuth consent screen: isi nama aplikasi (tanpa kata TBC), email dukungan, lalu tambahkan email penguji selama status masih Testing.
+   - Credentials, Create Credentials, OAuth client ID, tipe **Web application**.
+   - Authorized redirect URIs: `https://<project-ref>.supabase.co/auth/v1/callback` (lihat di Supabase, Authentication, Sign In / Providers, Google).
+2. Supabase, Authentication, Sign In / Providers, **Google**: aktifkan, tempel Client ID dan Client Secret.
+3. Supabase, Authentication, URL Configuration:
+   - Site URL: domain production, contoh `https://pmo-tbc.vercel.app`.
+   - Redirect URLs: `http://localhost:3000/api/auth/callback` dan `https://pmo-tbc.vercel.app/api/auth/callback`.
+4. (Opsional) Authentication, Sign In / Providers, Email: matikan **Confirm email** kalau tidak ingin pendaftar membuka email konfirmasi dulu. Email bawaan Supabase dibatasi beberapa email per jam, jadi untuk demo sebaiknya dimatikan atau pakai SMTP sendiri.
+
+Menghubungkan akun baru ke data pengobatan (sementara, lewat SQL Editor sampai ada fitur di dashboard nakes):
+
+```sql
+insert into public.pasien (profile_id, nakes_id, tanggal_mulai, jam_minum)
+select u.id, '<id nakes>', '2026-10-10', '07:00'
+from auth.users u where u.email = '<email pasien>';
+```
 
 **Akun demo** (password semua: `demo1234`)
 

@@ -1,36 +1,48 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
+import { LoaderCircle, LockKeyhole, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { AuthField } from "@/components/auth/auth-field";
+import { AuthPesan } from "@/components/auth/auth-shell";
 import { login } from "../actions";
 
-export function LoginForm() {
+export function LoginForm({ pesanAwal }: { pesanAwal?: string }) {
   const [state, action, pending] = useActionState(login, undefined);
+  // Terkontrol supaya email tidak hilang saat form di-reset setelah submit
+  const [email, setEmail] = useState("");
+  const pesanError = state?.error ?? pesanAwal;
 
   return (
-    <form action={action} className="flex flex-col gap-4">
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="email">Email</Label>
-        <Input id="email" name="email" type="email" autoComplete="email" required />
-      </div>
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="password">Kata sandi</Label>
-        <Input
-          id="password"
-          name="password"
-          type="password"
-          autoComplete="current-password"
-          required
-        />
-      </div>
-      {state?.error && (
-        <p role="alert" className="text-sm text-destructive">
-          {state.error}
-        </p>
-      )}
-      <Button type="submit" disabled={pending}>
+    <form action={action} className="flex flex-col gap-[34px]" noValidate>
+      {pesanError && <AuthPesan jenis="error">{pesanError}</AuthPesan>}
+
+      <AuthField
+        id="email"
+        name="email"
+        type="email"
+        label="Email"
+        ikon={Mail}
+        placeholder="Masukkan alamat email"
+        autoComplete="email"
+        inputMode="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        required
+      />
+      <AuthField
+        id="password"
+        name="password"
+        type="password"
+        label="Sandi"
+        ikon={LockKeyhole}
+        placeholder="Masukkan kata sandi"
+        autoComplete="current-password"
+        required
+      />
+
+      <Button type="submit" disabled={pending} className="h-11 w-full text-lg font-medium">
+        {pending && <LoaderCircle className="size-5 animate-spin" />}
         {pending ? "Sedang masuk..." : "Masuk"}
       </Button>
     </form>

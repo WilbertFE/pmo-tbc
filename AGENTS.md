@@ -252,7 +252,7 @@ New schema changes: always a **new** numbered migration file (`003_...sql`), nev
 
 ## 10. Tests
 
-- Write unit tests for crucial pure logic: the early warning status function, WIB date helpers, and progress calculation. Use Vitest; if it is not set up yet, tell the user and ask Kapten before installing.
+- Write unit tests for crucial pure logic: the early warning status function, WIB date helpers, and progress calculation. Vitest is set up: put tests next to the file as `*.test.ts` and run `npm test` (watch mode: `npm run test:watch`).
 - UI and end-to-end tests are not required for this hackathon.
 
 ---

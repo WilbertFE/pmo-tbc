@@ -170,7 +170,7 @@ Form Nama, Email, Kata Sandi, Konfirmasi Kata Sandi, ditambah tombol Google.
 
 ### Landing page: [`landing-01.png`](landing-01.png)
 
-Untuk halaman `/` (sekarang masih placeholder). Bagian dari atas ke bawah:
+Untuk halaman `/`. Bagian dari atas ke bawah:
 1. Navbar: LOGO, Beranda, Check in, Tentang Kami.
 2. Hero berlatar foto gelap: tag "Teman Perjalanan Terbaik", judul "Pantau Rutinitas Minum Obat Anda Setiap Hari dengan Mudah", subjudul, tombol "Mulai Perjalananmu".
 3. Tentang Kami: dua foto, kartu "100+ Faskes Terhubung", kartu "Pasien 500+", judul "Kami Mendukung Penuh Masa Pemulihan Anda".
@@ -181,7 +181,18 @@ Untuk halaman `/` (sekarang masih placeholder). Bagian dari atas ke bawah:
 
 Ada juga versi breakpoint per bagian di Figma: sm (sampai 389 px), md (390 sampai 809 px), lg (810 sampai 1199 px).
 
-Catatan: "Chatbot Edukasi" adalah fitur "kalau sempat", bukan MVP. Angka "100+ Faskes" dan "500+ Pasien" adalah contoh, jangan diklaim sebagai data asli.
+**Status:** sudah dibuat di `src/app/page.tsx` dengan komponen di `src/app/_landing/` (folder privat Next.js, bukan route).
+
+**Keputusan yang berbeda dari desain** (supaya halaman publik tidak menjanjikan fitur yang belum ada):
+- Navbar: Beranda, Tentang Kami, Cara Kerja, serta tombol Masuk dan Daftar. Kalau sudah login, tombolnya menjadi "Buka Aplikasi" ke halaman sesuai peran.
+- Hero: tag "Teman Setia Selama Pengobatan". Subjudul tidak menjanjikan "pengingat otomatis" karena fitur itu belum dibuat.
+- Tentang Kami: kartu "100+ Faskes" dan "500+ Pasien" diganti "180 Hari Pendampingan" dan "Pasien & PMO", karena angkanya bukan data asli. Tombol "Button" menjadi "Daftar Sekarang".
+- Kartu fitur: Check-in harian, Laporan efek samping, Pemantauan petugas (menggantikan Pengingat & eskalasi serta Chatbot Edukasi).
+- 3 langkah: Daftar Akun, Lakukan Check-in, Pemantauan Aman (menggantikan Terima Pengingat).
+- Testimoni fiktif diganti bagian "Kenapa Penting" berisi informasi umum tentang pentingnya pengobatan sampai tuntas dan peran PMO.
+- Footer Tirai.id diganti identitas aplikasi dan tautan internal, tanpa alamat atau email palsu.
+- Tidak ada kata "TBC" atau "tuberkulosis" di teks yang tampil publik.
+- Foto: hero memakai `auth-masuk.jpg`, Tentang Kami memakai `landing-tim.jpg` dan `auth-daftar.jpg`, 3 langkah memakai `landing-pendampingan.jpg` (semuanya dari file Figma, lisensi foto perlu dicek ke desainer).
 
 ### Check-in pasien: [`pasien-01-checkin.png`](pasien-01-checkin.png)
 

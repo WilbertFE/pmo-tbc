@@ -12,6 +12,9 @@ export interface InputStatusPasien {
   jamMinum: string; // Format "HH:mm" atau "HH:mm:ss"
   sudahCheckInHariIni: boolean;
   sudahCheckInKemarin: boolean;
+  // Check-in hari ini ada tetapi buktinya ditolak nakes. Kirim sudahCheckInHariIni: false,
+  // flag ini hanya menambah alasan supaya nakes tahu pasien perlu check-in ulang.
+  buktiHariIniDitolak?: boolean;
   daftarEfekSampingTerakhir?: DataEfekSampingRingkas[];
   // Masa pengobatan. Hari di luar masa ini tidak dihitung sebagai tidak check-in.
   tanggalMulai?: string; // Format "YYYY-MM-DD"
@@ -89,6 +92,10 @@ export function tentukanStatusPasien(input: InputStatusPasien): HasilStatusPasie
   }
 
   // 2. Evaluasi Kepatuhan Check-in
+  if (input.buktiHariIniDitolak && !input.sudahCheckInHariIni) {
+    alasan.push("Bukti check-in hari ini ditolak, pasien perlu check-in ulang");
+  }
+
   if (!input.sudahCheckInHariIni) {
     // Cek kondisi Merah: tidak check-in kemarin dan hari ini setelah lewat jam_minum
     if (!input.sudahCheckInKemarin && kemarinTermasukMasaPengobatan && sudahLewatJamMinum) {

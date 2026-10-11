@@ -100,6 +100,19 @@ describe("tentukanStatusPasien", () => {
     expect(hasil.status).toBe("merah");
   });
 
+  it("bukti ditolak: dihitung belum check-in dan diberi alasan", () => {
+    const hasil = tentukanStatusPasien({
+      jamMinum,
+      sudahCheckInHariIni: false,
+      sudahCheckInKemarin: true,
+      buktiHariIniDitolak: true,
+      tanggalHariIni,
+      waktuSekarang: jam("10:30"),
+    });
+    expect(hasil.status).toBe("kuning");
+    expect(hasil.alasan).toContain("Bukti check-in hari ini ditolak, pasien perlu check-in ulang");
+  });
+
   describe("masa pengobatan", () => {
     it("hari pertama: kemarin tidak dihitung, jadi kuning bukan merah", () => {
       const hasil = tentukanStatusPasien({

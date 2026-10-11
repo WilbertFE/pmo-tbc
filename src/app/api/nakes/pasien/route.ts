@@ -56,15 +56,19 @@ export async function GET() {
   const hariIni = tanggalWIB();
   const kemarin = tambahHari(hariIni, -1);
   const tigaHariLalu = tambahHari(hariIni, -3);
+  // Riwayat check-in 7 hari untuk ditinjau nakes (termasuk yang belum sempat diverifikasi)
+  const enamHariLalu = tambahHari(hariIni, -6);
 
   const pasienIds = daftarPasien.map((p) => p.id);
 
-  // Ambil check-in hari ini dan kemarin untuk semua pasien
+  // Ambil check-in 7 hari terakhir untuk semua pasien
   const { data: checkinList } = await supabase
     .from("checkin")
     .select("id, pasien_id, tanggal, media_path, status, created_at")
     .in("pasien_id", pasienIds)
-    .in("tanggal", [hariIni, kemarin]);
+    .gte("tanggal", enamHariLalu)
+    .lte("tanggal", hariIni)
+    .order("tanggal", { ascending: false });
 
   // Ambil efek samping dalam rentang 3-7 hari terakhir
   const { data: efekSampingList } = await supabase
@@ -105,11 +109,15 @@ export async function GET() {
         tanggal: tanggalWIB(new Date(e.created_at || new Date().toISOString())),
       }));
 
+      // Check-in yang buktinya ditolak dianggap belum check-in
+      const buktiHariIniDitolak = checkinHariIni?.status === "ditolak";
+
       // Tentukan status early warning
       const hasilStatus = tentukanStatusPasien({
         jamMinum: pasien.jam_minum,
-        sudahCheckInHariIni: Boolean(checkinHariIni),
-        sudahCheckInKemarin: Boolean(checkinKemarin),
+        sudahCheckInHariIni: Boolean(checkinHariIni) && !buktiHariIniDitolak,
+        sudahCheckInKemarin: Boolean(checkinKemarin) && checkinKemarin?.status !== "ditolak",
+        buktiHariIniDitolak,
         daftarEfekSampingTerakhir: daftarEfekSampingRingkas,
         tanggalMulai: pasien.tanggal_mulai,
         durasiHari: pasien.durasi_hari,
@@ -147,12 +155,22 @@ export async function GET() {
         checkinHariIni: checkinHariIni
           ? {
               id: checkinHariIni.id,
+              tanggal: checkinHariIni.tanggal,
               status: checkinHariIni.status,
               mediaPath: checkinHariIni.media_path,
               signedMediaUrl,
               createdAt: checkinHariIni.created_at,
             }
           : null,
+        riwayatCheckin: (checkinList || [])
+          .filter((c) => c.pasien_id === pasien.id)
+          .map((c) => ({
+            id: c.id,
+            tanggal: c.tanggal,
+            status: c.status,
+            mediaPath: c.media_path,
+            createdAt: c.created_at,
+          })),
         riwayatEfekSamping: efekSampingPasien,
         riwayatTindakLanjut: tindakLanjutPasien,
       };

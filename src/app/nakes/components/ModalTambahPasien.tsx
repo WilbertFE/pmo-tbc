@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AlertTriangle, Info, UserPlus, X } from "lucide-react";
 import { tanggalWIB } from "@/lib/tanggal";
+import { useTutupDenganEsc } from "./useTutupDenganEsc";
 
 interface ModalTambahPasienProps {
   onClose: () => void;
@@ -21,6 +22,8 @@ export function ModalTambahPasien({ onClose, onSuksesTambah }: ModalTambahPasien
   const [durasiHari, setDurasiHari] = useState("180");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pesanError, setPesanError] = useState<string | null>(null);
+
+  useTutupDenganEsc(onClose);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

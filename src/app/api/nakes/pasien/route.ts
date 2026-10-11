@@ -111,6 +111,9 @@ export async function GET() {
         sudahCheckInHariIni: Boolean(checkinHariIni),
         sudahCheckInKemarin: Boolean(checkinKemarin),
         daftarEfekSampingTerakhir: daftarEfekSampingRingkas,
+        tanggalMulai: pasien.tanggal_mulai,
+        durasiHari: pasien.durasi_hari,
+        tanggalHariIni: hariIni,
       });
 
       // Hitung progres pengobatan

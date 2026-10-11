@@ -13,6 +13,9 @@ export interface InputStatusPasien {
   sudahCheckInHariIni: boolean;
   sudahCheckInKemarin: boolean;
   daftarEfekSampingTerakhir?: DataEfekSampingRingkas[];
+  // Masa pengobatan. Hari di luar masa ini tidak dihitung sebagai tidak check-in.
+  tanggalMulai?: string; // Format "YYYY-MM-DD"
+  durasiHari?: number;
   // Parameter waktu opsional untuk memudahkan pengujian (unit testing)
   waktuSekarang?: Date;
   tanggalHariIni?: string;
@@ -31,6 +34,7 @@ export interface HasilStatusPasien {
 //           atau ada efek samping tingkat sedang dalam 3 hari terakhir.
 // - Hijau: Sudah check-in hari ini dan tidak merah atau kuning (atau kondisi normal).
 // Jika merah dan kuning sama-sama terpenuhi, gunakan merah.
+// Hari sebelum tanggalMulai dan setelah durasiHari tidak dihitung sebagai tidak check-in.
 export function tentukanStatusPasien(input: InputStatusPasien): HasilStatusPasien {
   const sekarang = input.waktuSekarang ?? new Date();
   const hariIni = input.tanggalHariIni ?? tanggalWIB(sekarang);
@@ -40,6 +44,29 @@ export function tentukanStatusPasien(input: InputStatusPasien): HasilStatusPasie
 
   const sudahLewatJamMinum = sekarang.getTime() >= targetWaktuMinum.getTime();
   const sudahLewat2JamMinum = sekarang.getTime() >= targetWaktuMinumPlus2Jam.getTime();
+
+  // 0. Di luar masa pengobatan: belum mulai atau sudah selesai, tidak ada kewajiban check-in
+  if (input.tanggalMulai) {
+    const hariKe = selisihHari(input.tanggalMulai, hariIni) + 1;
+    if (hariKe < 1) {
+      return {
+        status: "hijau",
+        alasan: ["Pengobatan belum dimulai"],
+        keterangan: "Belum mulai",
+      };
+    }
+    if (input.durasiHari !== undefined && hariKe > input.durasiHari) {
+      return {
+        status: "hijau",
+        alasan: ["Masa pengobatan sudah selesai"],
+        keterangan: "Pengobatan selesai",
+      };
+    }
+  }
+
+  // Kemarin hanya dihitung kalau sudah termasuk masa pengobatan (bukan hari pertama)
+  const kemarinTermasukMasaPengobatan =
+    !input.tanggalMulai || selisihHari(input.tanggalMulai, hariIni) >= 1;
 
   const alasan: string[] = [];
   let isMerah = false;
@@ -64,7 +91,7 @@ export function tentukanStatusPasien(input: InputStatusPasien): HasilStatusPasie
   // 2. Evaluasi Kepatuhan Check-in
   if (!input.sudahCheckInHariIni) {
     // Cek kondisi Merah: tidak check-in kemarin dan hari ini setelah lewat jam_minum
-    if (!input.sudahCheckInKemarin && sudahLewatJamMinum) {
+    if (!input.sudahCheckInKemarin && kemarinTermasukMasaPengobatan && sudahLewatJamMinum) {
       isMerah = true;
       alasan.push("Tidak check-in 2 hari berturut-turut");
     }

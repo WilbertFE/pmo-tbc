@@ -79,6 +79,67 @@ export function jalankanPengujianStatusPasien() {
   });
   console.assert(kasus7.status === "merah", `Kasus 7 gagal: diharapkan merah, didapat ${kasus7.status}`);
 
+  // Kasus 9: Hari pertama pengobatan, belum check-in dan lewat 2 jam -> Kuning (bukan Merah),
+  // karena kemarin belum termasuk masa pengobatan
+  const kasus9 = tentukanStatusPasien({
+    jamMinum,
+    sudahCheckInHariIni: false,
+    sudahCheckInKemarin: false,
+    tanggalMulai: tanggalHariIni,
+    durasiHari: 180,
+    tanggalHariIni,
+    waktuSekarang: waktuWIB(tanggalHariIni, "15:00"),
+  });
+  console.assert(kasus9.status === "kuning", `Kasus 9 gagal: diharapkan kuning, didapat ${kasus9.status}`);
+
+  // Kasus 10: Hari kedua, kemarin tidak check-in dan hari ini lewat jam minum -> Merah
+  const kasus10 = tentukanStatusPasien({
+    jamMinum,
+    sudahCheckInHariIni: false,
+    sudahCheckInKemarin: false,
+    tanggalMulai: "2026-10-13",
+    durasiHari: 180,
+    tanggalHariIni,
+    waktuSekarang: waktuWIB(tanggalHariIni, "08:30"),
+  });
+  console.assert(kasus10.status === "merah", `Kasus 10 gagal: diharapkan merah, didapat ${kasus10.status}`);
+
+  // Kasus 11: Pengobatan belum dimulai -> Hijau
+  const kasus11 = tentukanStatusPasien({
+    jamMinum,
+    sudahCheckInHariIni: false,
+    sudahCheckInKemarin: false,
+    tanggalMulai: "2026-10-20",
+    durasiHari: 180,
+    tanggalHariIni,
+    waktuSekarang: waktuWIB(tanggalHariIni, "15:00"),
+  });
+  console.assert(kasus11.status === "hijau", `Kasus 11 gagal: diharapkan hijau, didapat ${kasus11.status}`);
+
+  // Kasus 12: Masa pengobatan sudah selesai (hari ke-181 dari 180) -> Hijau
+  const kasus12 = tentukanStatusPasien({
+    jamMinum,
+    sudahCheckInHariIni: false,
+    sudahCheckInKemarin: false,
+    tanggalMulai: "2026-04-17",
+    durasiHari: 180,
+    tanggalHariIni,
+    waktuSekarang: waktuWIB(tanggalHariIni, "15:00"),
+  });
+  console.assert(kasus12.status === "hijau", `Kasus 12 gagal: diharapkan hijau, didapat ${kasus12.status}`);
+
+  // Kasus 13: Hari terakhir pengobatan (hari ke-180) tetap dipantau -> Merah bila 2 hari tidak check-in
+  const kasus13 = tentukanStatusPasien({
+    jamMinum,
+    sudahCheckInHariIni: false,
+    sudahCheckInKemarin: false,
+    tanggalMulai: "2026-04-18",
+    durasiHari: 180,
+    tanggalHariIni,
+    waktuSekarang: waktuWIB(tanggalHariIni, "08:30"),
+  });
+  console.assert(kasus13.status === "merah", `Kasus 13 gagal: diharapkan merah, didapat ${kasus13.status}`);
+
   // Kasus 8: Urutan prioritas pasien (Merah di paling atas)
   const daftarAcak = [
     { nama: "C", status: "hijau" as const },

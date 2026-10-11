@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { ClipboardPen, FileVideo, MousePointerClick } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { tanggalWIB } from "@/lib/tanggal";
+import { selisihHari, tambahHari, tanggalWIB } from "@/lib/tanggal";
 import {
   jamMinumTampil,
   jamWIBDari,
@@ -12,11 +12,12 @@ import {
   tanggalPanjang,
   tanggalPendek,
 } from "./status-tampilan";
+import type { CheckinDitinjau } from "./ModalVerifikasi";
 import type { PasienNakes } from "./types";
 
 interface PanelDetailPasienProps {
   pasien: PasienNakes | null;
-  onBukaVerifikasi: (pasien: PasienNakes) => void;
+  onBukaVerifikasi: (pasien: PasienNakes, checkin: CheckinDitinjau) => void;
   onBukaTindakLanjut: (pasien: PasienNakes) => void;
 }
 
@@ -28,6 +29,20 @@ const GAYA_TINGKAT: Record<string, string> = {
   sedang: "bg-warning-subtle text-[#9a5b00]",
   ringan: "bg-muted text-muted-foreground",
 };
+
+const GAYA_VERIFIKASI: Record<string, string> = {
+  terverifikasi: "bg-success-subtle text-[#0b7a5a]",
+  ditolak: "bg-alert-subtle text-[#b3261e]",
+  menunggu: "bg-info-subtle text-[#1f6fa8]",
+};
+
+// Tanggal 7 hari terakhir yang termasuk masa pengobatan, terbaru di atas
+function hariRiwayat(pasien: PasienNakes) {
+  const hariIni = tanggalWIB();
+  return Array.from({ length: 7 }, (_, i) => tambahHari(hariIni, -i)).filter(
+    (tgl) => selisihHari(pasien.tanggalMulai, tgl) >= 0,
+  );
+}
 
 function Info({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -127,10 +142,42 @@ export function PanelDetailPasien({ pasien, onBukaVerifikasi, onBukaTindakLanjut
 
       <div className="h-px bg-border" />
 
+      <div className="flex flex-col gap-2 px-2">
+        <p className="text-xs leading-4 text-muted-foreground">Riwayat 7 Hari</p>
+        <ul className="flex flex-col gap-1">
+          {hariRiwayat(pasien).map((tgl) => {
+            const item = pasien.riwayatCheckin.find((c) => c.tanggal === tgl);
+            return (
+              <li key={tgl} className="flex items-center justify-between gap-2 text-sm leading-[18px]">
+                <span className="w-20 shrink-0 text-foreground">{tanggalPendek(tgl)}</span>
+                {item ? (
+                  <>
+                    <span className={cn("rounded-full px-2 text-xs leading-5", GAYA_VERIFIKASI[item.status])}>
+                      {LABEL_VERIFIKASI[item.status]}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => onBukaVerifikasi(pasien, item)}
+                      className="ml-auto rounded-md px-2 py-1 text-xs font-medium text-primary hover:bg-brand-50 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+                    >
+                      Tinjau
+                    </button>
+                  </>
+                ) : (
+                  <span className="mr-auto text-xs text-muted-foreground">Tidak check-in</span>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+
+      <div className="h-px bg-border" />
+
       <div className="flex flex-col gap-2">
         <button
           type="button"
-          onClick={() => onBukaVerifikasi(pasien)}
+          onClick={() => checkin && onBukaVerifikasi(pasien, checkin)}
           disabled={!checkin}
           title={checkin ? undefined : "Pasien belum check-in hari ini"}
           className={cn(gayaTombolPanel, "text-primary")}

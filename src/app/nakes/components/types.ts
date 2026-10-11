@@ -1,11 +1,23 @@
 import type { StatusPeringatan } from "@/lib/status-pasien";
 import type { Progres } from "@/lib/progres";
 
+export type StatusCheckin = "menunggu" | "terverifikasi" | "ditolak";
+
 export interface CheckinHariIni {
   id: string;
-  status: "menunggu" | "terverifikasi" | "ditolak";
+  tanggal: string;
+  status: StatusCheckin;
   mediaPath: string | null;
   signedMediaUrl: string | null;
+  createdAt: string;
+}
+
+// Check-in 7 hari terakhir. Signed URL media diambil saat ditinjau lewat /api/nakes/media.
+export interface RiwayatCheckin {
+  id: string;
+  tanggal: string;
+  status: StatusCheckin;
+  mediaPath: string | null;
   createdAt: string;
 }
 
@@ -35,6 +47,7 @@ export interface PasienNakes {
   alasanStatus: string[];
   keteranganStatus: string;
   checkinHariIni: CheckinHariIni | null;
+  riwayatCheckin: RiwayatCheckin[];
   riwayatEfekSamping: ItemEfekSamping[];
   riwayatTindakLanjut: ItemTindakLanjut[];
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { BarAtasNakes, HeaderNakes } from "./HeaderNakes";
 import { SidebarNakes } from "./SidebarNakes";
@@ -8,11 +8,46 @@ import { FilterPasien, gayaTombolSekunder } from "./FilterPasien";
 import { TabelPasienNakes } from "./TabelPasienNakes";
 import { PanelDetailPasien } from "./PanelDetailPasien";
 import { GrafikKepatuhan, type DataKepatuhanHarian } from "./GrafikKepatuhan";
-import { ModalVerifikasi } from "./ModalVerifikasi";
+import { ModalVerifikasi, type CheckinDitinjau } from "./ModalVerifikasi";
+import { NotifikasiNakes, type Notifikasi } from "./NotifikasiNakes";
 import { ModalTindakLanjut } from "./ModalTindakLanjut";
 import { ModalTambahPasien } from "./ModalTambahPasien";
 import type { PasienNakes, RingkasanDashboard } from "./types";
 import { AlertCircle, RotateCw } from "lucide-react";
+
+// Bandingkan data lama dan baru untuk notifikasi eskalasi
+function cariPerubahan(lama: PasienNakes[], baru: PasienNakes[]): Omit<Notifikasi, "id">[] {
+  const petaLama = new Map(lama.map((p) => [p.id, p]));
+  const hasil: Omit<Notifikasi, "id">[] = [];
+  for (const p of baru) {
+    const sebelum = petaLama.get(p.id);
+    if (!sebelum) continue;
+    if (p.status === "merah" && sebelum.status !== "merah") {
+      hasil.push({
+        jenis: "darurat",
+        judul: `${p.nama} perlu perhatian segera`,
+        // Tampilkan alasan penyebab merah, bukan sekadar alasan pertama
+        isi:
+          p.alasanStatus.find((a) => a.includes("berat") || a.includes("2 hari")) ??
+          p.alasanStatus[0] ??
+          "Status berubah menjadi merah",
+        pasienId: p.id,
+      });
+    }
+    if (p.checkinHariIni && p.checkinHariIni.id !== sebelum.checkinHariIni?.id) {
+      hasil.push({
+        jenis: "checkin",
+        judul: `Check-in baru dari ${p.nama}`,
+        isi: "Bukti minum obat menunggu verifikasi",
+        pasienId: p.id,
+      });
+    }
+  }
+  return hasil;
+}
+
+// Pasien yang punya check-in belum diverifikasi dalam 7 hari terakhir
+const adaMenunggu = (p: PasienNakes) => p.riwayatCheckin.some((c) => c.status === "menunggu");
 
 const RINGKASAN_KOSONG: RingkasanDashboard = { total: 0, merah: 0, kuning: 0, hijau: 0 };
 
@@ -51,15 +86,35 @@ export function DashboardNakesClient() {
   const [barisPerHalaman, setBarisPerHalaman] = useState(5);
 
   // Modal
-  const [pasienVerifikasi, setPasienVerifikasi] = useState<PasienNakes | null>(null);
+  const [verifikasi, setVerifikasi] = useState<{ pasien: PasienNakes; checkin: CheckinDitinjau } | null>(null);
+  const [notifikasi, setNotifikasi] = useState<Notifikasi[]>([]);
+  const dataSebelumnya = useRef<PasienNakes[] | null>(null);
+  const idNotifikasi = useRef(0);
   const [pasienTindakLanjut, setPasienTindakLanjut] = useState<PasienNakes | null>(null);
   const [tambahPasienTerbuka, setTambahPasienTerbuka] = useState(false);
 
+  const tutupNotifikasi = useCallback((id: number) => {
+    setNotifikasi((daftar) => daftar.filter((n) => n.id !== id));
+  }, []);
+
   const terapkanData = useCallback((data: Awaited<ReturnType<typeof ambilDataPasien>>) => {
-    setDaftarPasien(data.pasien || []);
+    const baru = data.pasien || [];
+    // Notifikasi hanya untuk perubahan setelah data awal dimuat
+    if (dataSebelumnya.current) {
+      const perubahan = cariPerubahan(dataSebelumnya.current, baru).map((n) => ({
+        ...n,
+        id: ++idNotifikasi.current,
+      }));
+      if (perubahan.length) {
+        setNotifikasi((daftar) => [...daftar, ...perubahan].slice(-4));
+        perubahan.forEach((n) => setTimeout(() => tutupNotifikasi(n.id), 8000));
+      }
+    }
+    dataSebelumnya.current = baru;
+    setDaftarPasien(baru);
     setRingkasan(data.ringkasan || RINGKASAN_KOSONG);
     if (data.nakes?.nama) setNamaNakes(data.nakes.nama);
-  }, []);
+  }, [tutupNotifikasi]);
 
   // Muat ulang data untuk tombol Perbarui dan event realtime
   const muatData = useCallback(async () => {
@@ -118,17 +173,14 @@ export function DashboardNakesClient() {
     };
   }, [muatData]);
 
-  const jumlahMenunggu = useMemo(
-    () => daftarPasien.filter((p) => p.checkinHariIni?.status === "menunggu").length,
-    [daftarPasien],
-  );
+  const jumlahMenunggu = useMemo(() => daftarPasien.filter(adaMenunggu).length, [daftarPasien]);
 
   // Data sudah diurutkan API: merah paling atas, lalu kuning, lalu hijau
   const pasienTerfilter = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
     return daftarPasien.filter((pasien) => {
       if (filterStatus !== "semua" && pasien.status !== filterStatus) return false;
-      if (hanyaMenunggu && pasien.checkinHariIni?.status !== "menunggu") return false;
+      if (hanyaMenunggu && !adaMenunggu(pasien)) return false;
       if (query && !pasien.nama.toLowerCase().includes(query) && !pasien.namaPmo.toLowerCase().includes(query)) {
         return false;
       }
@@ -222,7 +274,7 @@ export function DashboardNakesClient() {
                 <div className="xl:hidden">
                   <PanelDetailPasien
                     pasien={pasienTerpilih}
-                    onBukaVerifikasi={setPasienVerifikasi}
+                    onBukaVerifikasi={(pasien, checkin) => setVerifikasi({ pasien, checkin })}
                     onBukaTindakLanjut={setPasienTindakLanjut}
                   />
                 </div>
@@ -233,7 +285,7 @@ export function DashboardNakesClient() {
               <div className="sticky top-4 hidden xl:block">
                 <PanelDetailPasien
                   pasien={pasienTerpilih}
-                  onBukaVerifikasi={setPasienVerifikasi}
+                  onBukaVerifikasi={(pasien, checkin) => setVerifikasi({ pasien, checkin })}
                   onBukaTindakLanjut={setPasienTindakLanjut}
                 />
               </div>
@@ -242,13 +294,29 @@ export function DashboardNakesClient() {
         </div>
       </div>
 
-      {pasienVerifikasi && (
+      {verifikasi && (
         <ModalVerifikasi
-          pasien={pasienVerifikasi}
-          onClose={() => setPasienVerifikasi(null)}
+          key={verifikasi.checkin.id}
+          pasien={verifikasi.pasien}
+          checkin={verifikasi.checkin}
+          onClose={() => setVerifikasi(null)}
           onSuksesVerifikasi={muatData}
         />
       )}
+
+      <NotifikasiNakes
+        daftar={notifikasi}
+        onTutup={tutupNotifikasi}
+        onBuka={(n) => {
+          setFilterStatus("semua");
+          setHanyaMenunggu(false);
+          setSearchQuery("");
+          setPasienTerpilihId(n.pasienId);
+          const indeks = daftarPasien.findIndex((p) => p.id === n.pasienId);
+          setHalaman(indeks >= 0 ? Math.floor(indeks / barisPerHalaman) + 1 : 1);
+          tutupNotifikasi(n.id);
+        }}
+      />
 
       {tambahPasienTerbuka && (
         <ModalTambahPasien onClose={() => setTambahPasienTerbuka(false)} onSuksesTambah={muatData} />

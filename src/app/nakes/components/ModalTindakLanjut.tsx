@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { ClipboardList, X, Send, History, AlertTriangle } from "lucide-react";
 import type { PasienNakes } from "./types";
+import { useTutupDenganEsc } from "./useTutupDenganEsc";
 
 interface ModalTindakLanjutProps {
   pasien: PasienNakes | null;
@@ -20,6 +21,8 @@ export function ModalTindakLanjut({
   const [catatan, setCatatan] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pesanError, setPesanError] = useState<string | null>(null);
+
+  useTutupDenganEsc(onClose);
 
   if (!pasien) return null;
 

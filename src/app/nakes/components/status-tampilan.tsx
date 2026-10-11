@@ -8,6 +8,8 @@ type JenisTag = "merah" | "kuning" | "hijau" | "netral";
 export function tampilanStatus(pasien: PasienNakes): { label: string; jenis: JenisTag } {
   const alasan = pasien.alasanStatus.join(" ").toLowerCase();
 
+  const buktiDitolak = pasien.checkinHariIni?.status === "ditolak";
+
   if (pasien.status === "merah") {
     return {
       label: alasan.includes("efek samping berat") ? "Efek Samping Berat" : "Terlewat 2 Hari",
@@ -16,12 +18,16 @@ export function tampilanStatus(pasien: PasienNakes): { label: string; jenis: Jen
   }
 
   if (pasien.status === "kuning") {
+    if (buktiDitolak) return { label: "Bukti Ditolak", jenis: "kuning" };
     return {
       label: alasan.includes("terlambat") ? "Terlambat Minum Obat" : "Efek Samping Sedang",
       jenis: "kuning",
     };
   }
 
+  if (buktiDitolak) {
+    return { label: "Bukti Ditolak", jenis: "netral" };
+  }
   if (pasien.checkinHariIni) {
     return { label: "Sudah Minum Obat", jenis: "hijau" };
   }

@@ -102,7 +102,7 @@ export default function FormCheckin({
       }
 
       // 2. Simpan data check-in lewat API route
-      const response = await fetch("/api/checkin", {
+      const response = await fetch("/api/pasien/checkin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -114,8 +114,14 @@ export default function FormCheckin({
       });
 
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error ?? "Gagal menyimpan data check-in.");
+        let pesanError = "Gagal menyimpan data check-in.";
+        try {
+          const data = await response.json();
+          if (data?.error) pesanError = data.error;
+        } catch {
+          // Response bukan JSON
+        }
+        throw new Error(pesanError);
       }
 
       setPesan({

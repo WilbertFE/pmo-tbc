@@ -40,8 +40,14 @@ export default function FormEfekSamping() {
       });
 
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error ?? "Gagal menyimpan laporan.");
+        let pesanError = "Gagal menyimpan laporan.";
+        try {
+          const data = await response.json();
+          if (data?.error) pesanError = data.error;
+        } catch {
+          // Response bukan JSON
+        }
+        throw new Error(pesanError);
       }
 
       setPesan({

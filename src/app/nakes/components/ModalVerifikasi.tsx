@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Check, X, AlertTriangle, ShieldCheck, Clock, FileVideo } from "lucide-react";
 import type { PasienNakes } from "./types";
+import { LABEL_VERIFIKASI } from "./status-tampilan";
 
 interface ModalVerifikasiProps {
   pasien: PasienNakes | null;
@@ -54,11 +55,11 @@ export function ModalVerifikasi({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
-      <div className="relative w-full max-w-lg bg-background rounded-2xl shadow-2xl border overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="relative w-full max-w-lg bg-background rounded-md shadow-[0px_6px_18px_0px_rgba(0,0,0,0.12)] border border-[#d4d4d8] overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header Modal */}
         <div className="flex items-center justify-between p-4 border-b">
           <div>
-            <h3 className="font-semibold text-lg flex items-center gap-2">
+            <h3 className="text-xl leading-6 font-medium flex items-center gap-2">
               <ShieldCheck className="size-5 text-primary" />
               Tinjau Bukti Check-in
             </h3>
@@ -77,7 +78,7 @@ export function ModalVerifikasi({
 
         {/* Isi Modal: Preview Media */}
         <div className="p-4 flex-1 overflow-y-auto space-y-4">
-          <div className="bg-black/90 rounded-xl overflow-hidden flex items-center justify-center min-h-[260px] max-h-[380px]">
+          <div className="bg-black/90 rounded-md overflow-hidden flex items-center justify-center min-h-[260px] max-h-[380px]">
             {checkin.signedMediaUrl ? (
               isVideo ? (
                 <video
@@ -104,7 +105,7 @@ export function ModalVerifikasi({
           </div>
 
           {/* Info Status Saat Ini */}
-          <div className="flex items-center justify-between bg-muted/40 p-3 rounded-lg text-xs">
+          <div className="flex items-center justify-between bg-muted p-3 rounded-md text-xs">
             <div className="flex items-center gap-1.5 text-muted-foreground">
               <Clock className="size-3.5" />
               Waktu Unggah:{" "}
@@ -117,14 +118,22 @@ export function ModalVerifikasi({
             </div>
             <div>
               Status Saat Ini:{" "}
-              <span className="font-semibold uppercase px-2 py-0.5 rounded text-[10px] bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
-                {checkin.status}
+              <span
+                className={`rounded-full px-2 text-xs leading-5 ${
+                  checkin.status === "terverifikasi"
+                    ? "bg-success-subtle text-[#0b7a5a]"
+                    : checkin.status === "ditolak"
+                      ? "bg-alert-subtle text-[#b3261e]"
+                      : "bg-info-subtle text-[#1f6fa8]"
+                }`}
+              >
+                {LABEL_VERIFIKASI[checkin.status]}
               </span>
             </div>
           </div>
 
           {pesanError && (
-            <div className="p-3 rounded-lg bg-red-500/10 text-red-600 dark:text-red-400 text-xs flex items-center gap-2">
+            <div className="p-3 rounded-lg bg-alert-subtle text-[#b3261e] text-xs flex items-center gap-2">
               <AlertTriangle className="size-4 shrink-0" />
               <span>{pesanError}</span>
             </div>
@@ -158,7 +167,7 @@ export function ModalVerifikasi({
               size="sm"
               onClick={() => handleProses("terverifikasi")}
               disabled={isSubmitting}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1.5"
+              className="flex items-center gap-1.5"
             >
               <Check className="size-4" />
               Verifikasi Valid

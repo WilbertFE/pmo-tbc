@@ -2,122 +2,114 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { HeaderNakes } from "./HeaderNakes";
-import { FilterPasien } from "./FilterPasien";
+import { BarAtasNakes, HeaderNakes } from "./HeaderNakes";
+import { SidebarNakes } from "./SidebarNakes";
+import { FilterPasien, gayaTombolSekunder } from "./FilterPasien";
 import { TabelPasienNakes } from "./TabelPasienNakes";
+import { PanelDetailPasien } from "./PanelDetailPasien";
+import { GrafikKepatuhan, type DataKepatuhanHarian } from "./GrafikKepatuhan";
 import { ModalVerifikasi } from "./ModalVerifikasi";
 import { ModalTindakLanjut } from "./ModalTindakLanjut";
 import { ModalTambahPasien } from "./ModalTambahPasien";
 import type { PasienNakes, RingkasanDashboard } from "./types";
 import { AlertCircle, RotateCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
+
+const RINGKASAN_KOSONG: RingkasanDashboard = { total: 0, merah: 0, kuning: 0, hijau: 0 };
+
+async function ambilDataPasien() {
+  const res = await fetch("/api/nakes/pasien");
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Gagal memuat data pasien");
+  return data as {
+    pasien: PasienNakes[];
+    ringkasan: RingkasanDashboard;
+    nakes?: { nama?: string };
+  };
+}
+
+async function ambilDataKepatuhan() {
+  const res = await fetch("/api/nakes/kepatuhan");
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Gagal memuat data kepatuhan");
+  return (data.harian ?? []) as DataKepatuhanHarian[];
+}
 
 export function DashboardNakesClient() {
   const [daftarPasien, setDaftarPasien] = useState<PasienNakes[]>([]);
-  const [ringkasan, setRingkasan] = useState<RingkasanDashboard>({
-    total: 0,
-    merah: 0,
-    kuning: 0,
-    hijau: 0,
-  });
+  const [ringkasan, setRingkasan] = useState<RingkasanDashboard>(RINGKASAN_KOSONG);
+  const [kepatuhan, setKepatuhan] = useState<DataKepatuhanHarian[]>([]);
   const [namaNakes, setNamaNakes] = useState<string>("Petugas Nakes");
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [errorPesan, setErrorPesan] = useState<string | null>(null);
 
-  // Filter & Search State
+  // Filter, pencarian, pilihan baris, dan paginasi
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [filterStatus, setFilterStatus] = useState<string>("semua");
+  const [hanyaMenunggu, setHanyaMenunggu] = useState(false);
+  const [pasienTerpilihId, setPasienTerpilihId] = useState<string | null>(null);
+  const [halaman, setHalaman] = useState(1);
+  const [barisPerHalaman, setBarisPerHalaman] = useState(5);
 
-  // Modal State
+  // Modal
   const [pasienVerifikasi, setPasienVerifikasi] = useState<PasienNakes | null>(null);
   const [pasienTindakLanjut, setPasienTindakLanjut] = useState<PasienNakes | null>(null);
   const [tambahPasienTerbuka, setTambahPasienTerbuka] = useState(false);
 
-  // Fungsi Fetch Data Pasien untuk tombol refresh dan realtime
+  const terapkanData = useCallback((data: Awaited<ReturnType<typeof ambilDataPasien>>) => {
+    setDaftarPasien(data.pasien || []);
+    setRingkasan(data.ringkasan || RINGKASAN_KOSONG);
+    if (data.nakes?.nama) setNamaNakes(data.nakes.nama);
+  }, []);
+
+  // Muat ulang data untuk tombol Perbarui dan event realtime
   const muatData = useCallback(async () => {
     setIsLoading(true);
     setErrorPesan(null);
     try {
-      const res = await fetch("/api/nakes/pasien");
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "Gagal memuat data pasien");
-      }
-
-      setDaftarPasien(data.pasien || []);
-      setRingkasan(data.ringkasan || { total: 0, merah: 0, kuning: 0, hijau: 0 });
-      if (data.nakes?.nama) {
-        setNamaNakes(data.nakes.nama);
-      }
+      const [dataPasien, dataKepatuhan] = await Promise.all([ambilDataPasien(), ambilDataKepatuhan()]);
+      terapkanData(dataPasien);
+      setKepatuhan(dataKepatuhan);
     } catch (err: unknown) {
       setErrorPesan(err instanceof Error ? err.message : "Terjadi kesalahan koneksi");
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [terapkanData]);
 
-  // Inisialisasi data awal saat komponen dimuat
+  // Data awal saat halaman dibuka
   useEffect(() => {
     let dibatalkan = false;
 
-    const inisialisasiData = async () => {
-      try {
-        const res = await fetch("/api/nakes/pasien");
-        const data = await res.json();
-
+    Promise.all([ambilDataPasien(), ambilDataKepatuhan()])
+      .then(([dataPasien, dataKepatuhan]) => {
         if (dibatalkan) return;
-
-        if (!res.ok) {
-          setErrorPesan(data.error || "Gagal memuat data pasien");
-        } else {
-          setDaftarPasien(data.pasien || []);
-          setRingkasan(data.ringkasan || { total: 0, merah: 0, kuning: 0, hijau: 0 });
-          if (data.nakes?.nama) {
-            setNamaNakes(data.nakes.nama);
-          }
-        }
-      } catch (err: unknown) {
-        if (!dibatalkan) {
-          setErrorPesan(err instanceof Error ? err.message : "Terjadi kesalahan koneksi");
-        }
-      } finally {
-        if (!dibatalkan) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    inisialisasiData();
+        terapkanData(dataPasien);
+        setKepatuhan(dataKepatuhan);
+      })
+      .catch((err: unknown) => {
+        if (!dibatalkan) setErrorPesan(err instanceof Error ? err.message : "Terjadi kesalahan koneksi");
+      })
+      .finally(() => {
+        if (!dibatalkan) setIsLoading(false);
+      });
 
     return () => {
       dibatalkan = true;
     };
-  }, []);
+  }, [terapkanData]);
 
-  // Langganan Supabase Realtime (Exception 2 AGENTS.md)
+  // Langganan Supabase Realtime (AGENTS.md bagian 6, pengecualian 2)
   useEffect(() => {
     const supabase = createClient();
 
-    // Dengarkan perubahan pada tabel checkin dan efek_samping
     const channel = supabase
       .channel("nakes-dashboard-realtime")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "checkin" },
-        () => {
-          // Refresh data otomatis ketika ada check-in baru atau pembaruan status
-          muatData();
-        },
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "efek_samping" },
-        () => {
-          // Refresh data otomatis ketika ada laporan efek samping baru
-          muatData();
-        },
-      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "checkin" }, () => {
+        muatData();
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "efek_samping" }, () => {
+        muatData();
+      })
       .subscribe();
 
     // Wajib: bersihkan channel saat unmount
@@ -126,86 +118,130 @@ export function DashboardNakesClient() {
     };
   }, [muatData]);
 
-  // Filter & Pencarian Pasien
+  const jumlahMenunggu = useMemo(
+    () => daftarPasien.filter((p) => p.checkinHariIni?.status === "menunggu").length,
+    [daftarPasien],
+  );
+
+  // Data sudah diurutkan API: merah paling atas, lalu kuning, lalu hijau
   const pasienTerfilter = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
     return daftarPasien.filter((pasien) => {
-      // Filter Status
-      if (filterStatus === "merah" && pasien.status !== "merah") return false;
-      if (filterStatus === "kuning" && pasien.status !== "kuning") return false;
-      if (filterStatus === "hijau" && pasien.status !== "hijau") return false;
-      if (filterStatus === "menunggu") {
-        if (!pasien.checkinHariIni || pasien.checkinHariIni.status !== "menunggu") {
-          return false;
-        }
+      if (filterStatus !== "semua" && pasien.status !== filterStatus) return false;
+      if (hanyaMenunggu && pasien.checkinHariIni?.status !== "menunggu") return false;
+      if (query && !pasien.nama.toLowerCase().includes(query) && !pasien.namaPmo.toLowerCase().includes(query)) {
+        return false;
       }
-
-      // Filter Pencarian
-      if (searchQuery.trim() !== "") {
-        const query = searchQuery.toLowerCase();
-        const namaCocok = pasien.nama.toLowerCase().includes(query);
-        const pmoCocok = pasien.namaPmo.toLowerCase().includes(query);
-        if (!namaCocok && !pmoCocok) return false;
-      }
-
       return true;
     });
-  }, [daftarPasien, filterStatus, searchQuery]);
+  }, [daftarPasien, filterStatus, hanyaMenunggu, searchQuery]);
+
+  // Pasien terpilih tetap sama setelah data diperbarui. Kalau hilang dari filter, pilih baris teratas.
+  const pasienTerpilih =
+    pasienTerfilter.find((p) => p.id === pasienTerpilihId) ?? pasienTerfilter[0] ?? null;
+
+  const gantiPencarian = (query: string) => {
+    setSearchQuery(query);
+    setHalaman(1);
+  };
+  const gantiFilter = (status: string) => {
+    setFilterStatus(status);
+    setHalaman(1);
+  };
 
   return (
-    <div className="min-h-screen bg-muted/20">
-      <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-6">
-        {/* Header & Ringkasan Metrik */}
-        <HeaderNakes
+    <div className="min-h-svh bg-[#fafafa]">
+      <div className="mx-auto flex max-w-[1440px] gap-4 p-4">
+        <SidebarNakes
           namaNakes={namaNakes}
-          ringkasan={ringkasan}
+          searchQuery={searchQuery}
+          onSearchChange={gantiPencarian}
+          onTambahPasien={() => setTambahPasienTerbuka(true)}
           onRefresh={muatData}
           isLoading={isLoading}
-          filterAktif={filterStatus}
-          onPilihFilter={setFilterStatus}
-          onTambahPasien={() => setTambahPasienTerbuka(true)}
         />
 
-        {/* Notifikasi Error jika ada */}
-        {errorPesan && (
-          <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm">
-              <AlertCircle className="size-5 shrink-0" />
-              <span>{errorPesan}</span>
+        <div className="flex min-w-0 flex-1 flex-col gap-4">
+          <BarAtasNakes />
+
+          <main className="flex flex-col gap-5 rounded-sm bg-white p-5 drop-shadow-[0px_4px_3px_rgba(0,0,0,0.06)]">
+            <HeaderNakes ringkasan={ringkasan} filterAktif={filterStatus} onPilihFilter={gantiFilter} />
+
+            {errorPesan && (
+              <div
+                role="alert"
+                className="flex items-center justify-between gap-3 rounded-md border border-alert/30 bg-alert-subtle p-3 text-sm text-[#b3261e]"
+              >
+                <span className="flex items-center gap-2">
+                  <AlertCircle aria-hidden className="size-5 shrink-0" />
+                  {errorPesan}
+                </span>
+                <button type="button" onClick={muatData} className={gayaTombolSekunder}>
+                  Coba Lagi
+                </button>
+              </div>
+            )}
+
+            <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_285px]">
+              <div id="daftar-pasien" className="flex min-w-0 scroll-mt-4 flex-col gap-5">
+                <FilterPasien
+                  searchQuery={searchQuery}
+                  onSearchChange={gantiPencarian}
+                  hanyaMenunggu={hanyaMenunggu}
+                  onToggleMenunggu={() => {
+                    setHanyaMenunggu((v) => !v);
+                    setHalaman(1);
+                  }}
+                  jumlahMenunggu={jumlahMenunggu}
+                  onRefresh={muatData}
+                  isLoading={isLoading}
+                  onTambahPasien={() => setTambahPasienTerbuka(true)}
+                />
+
+                {isLoading && daftarPasien.length === 0 ? (
+                  <div className="flex flex-col items-center gap-2 rounded-md border border-[#d4d4d8] px-6 py-16 text-center">
+                    <RotateCw aria-hidden className="size-7 animate-spin text-primary" />
+                    <p className="text-sm text-muted-foreground">Memuat data pasien...</p>
+                  </div>
+                ) : (
+                  <TabelPasienNakes
+                    daftarPasien={pasienTerfilter}
+                    pasienTerpilihId={pasienTerpilih?.id ?? null}
+                    onPilihPasien={(p) => setPasienTerpilihId(p.id)}
+                    halaman={halaman}
+                    barisPerHalaman={barisPerHalaman}
+                    onGantiHalaman={setHalaman}
+                    onGantiBarisPerHalaman={(n) => {
+                      setBarisPerHalaman(n);
+                      setHalaman(1);
+                    }}
+                  />
+                )}
+
+                {/* Di layar kecil, panel detail tampil di bawah tabel */}
+                <div className="xl:hidden">
+                  <PanelDetailPasien
+                    pasien={pasienTerpilih}
+                    onBukaVerifikasi={setPasienVerifikasi}
+                    onBukaTindakLanjut={setPasienTindakLanjut}
+                  />
+                </div>
+
+                <GrafikKepatuhan data={kepatuhan} isLoading={isLoading} />
+              </div>
+
+              <div className="sticky top-4 hidden xl:block">
+                <PanelDetailPasien
+                  pasien={pasienTerpilih}
+                  onBukaVerifikasi={setPasienVerifikasi}
+                  onBukaTindakLanjut={setPasienTindakLanjut}
+                />
+              </div>
             </div>
-            <Button variant="outline" size="xs" onClick={muatData}>
-              Coba Lagi
-            </Button>
-          </div>
-        )}
-
-        {/* Kontrol Filter dan Pencarian */}
-        <FilterPasien
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          filterStatus={filterStatus}
-          onFilterChange={setFilterStatus}
-          jumlahPasienFiltered={pasienTerfilter.length}
-        />
-
-        {/* Konten Utama: Tabel Pasien Information-dense */}
-        {isLoading && daftarPasien.length === 0 ? (
-          <div className="p-16 text-center border rounded-2xl bg-background">
-            <RotateCw className="size-8 animate-spin mx-auto text-primary mb-3" />
-            <p className="text-sm font-medium">Memuat data pasien nakes...</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Menghitung status kepatuhan dan early warning
-            </p>
-          </div>
-        ) : (
-          <TabelPasienNakes
-            daftarPasien={pasienTerfilter}
-            onBukaVerifikasi={(pasien) => setPasienVerifikasi(pasien)}
-            onBukaTindakLanjut={(pasien) => setPasienTindakLanjut(pasien)}
-          />
-        )}
+          </main>
+        </div>
       </div>
 
-      {/* Modal Dialog Verifikasi */}
       {pasienVerifikasi && (
         <ModalVerifikasi
           pasien={pasienVerifikasi}
@@ -214,15 +250,10 @@ export function DashboardNakesClient() {
         />
       )}
 
-      {/* Modal Dialog Tambah Pasien */}
       {tambahPasienTerbuka && (
-        <ModalTambahPasien
-          onClose={() => setTambahPasienTerbuka(false)}
-          onSuksesTambah={muatData}
-        />
+        <ModalTambahPasien onClose={() => setTambahPasienTerbuka(false)} onSuksesTambah={muatData} />
       )}
 
-      {/* Modal Dialog Tindak Lanjut */}
       {pasienTindakLanjut && (
         <ModalTindakLanjut
           pasien={pasienTindakLanjut}

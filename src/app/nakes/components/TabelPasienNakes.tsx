@@ -1,259 +1,154 @@
 "use client";
 
-import React from "react";
-import { Button } from "@/components/ui/button";
-import {
-  FileVideo,
-  ClipboardPen,
-  AlertCircle,
-  AlertTriangle,
-  CheckCircle2,
-  Clock,
-  Activity,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, Users } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { jamWIBDari, TagStatus } from "./status-tampilan";
 import type { PasienNakes } from "./types";
 
 interface TabelPasienNakesProps {
   daftarPasien: PasienNakes[];
-  onBukaVerifikasi: (pasien: PasienNakes) => void;
-  onBukaTindakLanjut: (pasien: PasienNakes) => void;
+  pasienTerpilihId: string | null;
+  onPilihPasien: (pasien: PasienNakes) => void;
+  halaman: number;
+  barisPerHalaman: number;
+  onGantiHalaman: (halaman: number) => void;
+  onGantiBarisPerHalaman: (jumlah: number) => void;
 }
 
+const PILIHAN_BARIS = [5, 10, 20];
+
+const gayaSel = "h-12 border-b border-[#d4d4d8] px-3 align-middle 2xl:px-4";
+
+// Tabel pasien sesuai desain Figma. Klik baris untuk melihat detail di panel kanan.
 export function TabelPasienNakes({
   daftarPasien,
-  onBukaVerifikasi,
-  onBukaTindakLanjut,
+  pasienTerpilihId,
+  onPilihPasien,
+  halaman,
+  barisPerHalaman,
+  onGantiHalaman,
+  onGantiBarisPerHalaman,
 }: TabelPasienNakesProps) {
-  if (daftarPasien.length === 0) {
+  const total = daftarPasien.length;
+  const jumlahHalaman = Math.max(1, Math.ceil(total / barisPerHalaman));
+  const halamanAman = Math.min(halaman, jumlahHalaman);
+  const awal = (halamanAman - 1) * barisPerHalaman;
+  const barisTampil = daftarPasien.slice(awal, awal + barisPerHalaman);
+
+  if (total === 0) {
     return (
-      <div className="p-12 text-center border rounded-2xl bg-muted/20">
-        <Activity className="size-10 mx-auto text-muted-foreground/60 mb-2" />
-        <h4 className="font-semibold text-base">Tidak ada pasien ditemukan</h4>
-        <p className="text-xs text-muted-foreground mt-1">
-          Tidak ada data pasien yang sesuai dengan kata kunci atau filter saat ini.
+      <div className="flex flex-col items-center gap-2 rounded-md border border-[#d4d4d8] bg-white px-6 py-12 text-center">
+        <Users aria-hidden className="size-8 text-muted-foreground" />
+        <p className="text-base leading-5 font-medium text-foreground">Tidak ada pasien ditemukan</p>
+        <p className="text-sm leading-[18px] text-muted-foreground">
+          Coba ubah kata kunci pencarian atau filter status.
         </p>
       </div>
     );
   }
 
   return (
-    <div className="border rounded-2xl overflow-hidden bg-background shadow-xs">
-      <div className="overflow-x-auto">
-        <table className="w-full text-left text-sm border-collapse">
+    <div className="overflow-hidden rounded-md bg-white shadow-[0px_6px_18px_0px_rgba(16,156,241,0.06)]">
+      <div className="overflow-x-auto rounded-md border border-[#d4d4d8]">
+        <table className="w-full min-w-[560px] border-collapse text-left">
           <thead>
-            <tr className="border-b bg-muted/50 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-              <th className="py-3 px-4 w-4">Prioritas</th>
-              <th className="py-3 px-4">Nama Pasien & PMO</th>
-              <th className="py-3 px-4">Status & Alasan</th>
-              <th className="py-3 px-4">Jadwal Minum</th>
-              <th className="py-3 px-4">Progres Pengobatan</th>
-              <th className="py-3 px-4">Bukti Check-in Hari Ini</th>
-              <th className="py-3 px-4">Keluhan Efek Samping</th>
-              <th className="py-3 px-4 text-right">Aksi</th>
+            <tr className="bg-muted text-base leading-5 whitespace-nowrap text-muted-foreground">
+              <th scope="col" className={cn(gayaSel, "w-12 px-0 text-center font-normal")}>
+                <span className="sr-only">Pilih</span>
+              </th>
+              <th scope="col" className={cn(gayaSel, "border-l font-normal")}>Nama Pasien</th>
+              <th scope="col" className={cn(gayaSel, "border-l font-normal")}>Progres</th>
+              <th scope="col" className={cn(gayaSel, "border-l font-normal")}>Waktu Check-in</th>
+              <th scope="col" className={cn(gayaSel, "w-[180px] border-l font-normal 2xl:w-[215px]")}>Status Hari Ini</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-border">
-            {daftarPasien.map((pasien) => {
-              const checkin = pasien.checkinHariIni;
-
-              // Warna bar status kiri
-              const warnaBorderKiri =
-                pasien.status === "merah"
-                  ? "border-l-4 border-l-red-600 bg-red-500/[0.02]"
-                  : pasien.status === "kuning"
-                  ? "border-l-4 border-l-amber-500 bg-amber-500/[0.02]"
-                  : "border-l-4 border-l-emerald-600";
-
+          <tbody className="text-base leading-5 text-black/[0.87]">
+            {barisTampil.map((pasien) => {
+              const terpilih = pasien.id === pasienTerpilihId;
               return (
                 <tr
                   key={pasien.id}
-                  className={`hover:bg-muted/40 transition-colors ${warnaBorderKiri}`}
+                  onClick={() => onPilihPasien(pasien)}
+                  className={cn("cursor-pointer transition-colors", terpilih ? "bg-brand-50" : "hover:bg-muted/50")}
                 >
-                  {/* Indikator Status */}
-                  <td className="py-3.5 px-4 text-center">
-                    {pasien.status === "merah" && (
-                      <span
-                        title="Prioritas Segera"
-                        className="inline-flex p-1.5 rounded-full bg-red-100 text-red-600 dark:bg-red-950/60 dark:text-red-400"
-                      >
-                        <AlertCircle className="size-4" />
-                      </span>
-                    )}
-                    {pasien.status === "kuning" && (
-                      <span
-                        title="Perlu Pemantauan"
-                        className="inline-flex p-1.5 rounded-full bg-amber-100 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400"
-                      >
-                        <AlertTriangle className="size-4" />
-                      </span>
-                    )}
-                    {pasien.status === "hijau" && (
-                      <span
-                        title="Terkendali"
-                        className="inline-flex p-1.5 rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400"
-                      >
-                        <CheckCircle2 className="size-4" />
-                      </span>
-                    )}
+                  <td className={cn(gayaSel, "px-0 text-center")}>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onPilihPasien(pasien);
+                      }}
+                      aria-pressed={terpilih}
+                      aria-label={`Lihat detail ${pasien.nama}`}
+                      className={cn(
+                        "inline-block h-[18px] w-[19px] rounded-sm align-middle transition focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none",
+                        terpilih ? "bg-brand-500" : "bg-[#e4e4e7]",
+                      )}
+                    />
                   </td>
-
-                  {/* Info Pasien & PMO */}
-                  <td className="py-3.5 px-4">
-                    <div className="font-semibold text-foreground text-sm">
-                      {pasien.nama}
-                    </div>
-                    <div className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                      <span>PMO:</span>
-                      <span className="font-medium text-foreground/80">
-                        {pasien.namaPmo}
-                      </span>
-                    </div>
+                  <td className={cn(gayaSel, "border-l")}>
+                    <p className="truncate">{pasien.nama}</p>
+                    <p className="truncate text-xs leading-4 text-muted-foreground">PMO: {pasien.namaPmo}</p>
                   </td>
-
-                  {/* Status & Keterangan Early Warning */}
-                  <td className="py-3.5 px-4 max-w-xs">
-                    <span
-                      className={`inline-block px-2 py-0.5 rounded text-[11px] font-semibold uppercase ${
-                        pasien.status === "merah"
-                          ? "bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-red-300"
-                          : pasien.status === "kuning"
-                          ? "bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300"
-                          : "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300"
-                      }`}
-                    >
-                      {pasien.keteranganStatus}
-                    </span>
-                    {pasien.alasanStatus.length > 0 && (
-                      <ul className="text-[11px] text-muted-foreground list-disc list-inside mt-1 space-y-0.5">
-                        {pasien.alasanStatus.map((alasan, idx) => (
-                          <li key={idx} className="leading-tight">
-                            {alasan}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
+                  <td className={cn(gayaSel, "border-l whitespace-nowrap")}>
+                    {pasien.progres.hariKe} / {pasien.durasiHari} Hari
                   </td>
-
-                  {/* Jam Minum Obat */}
-                  <td className="py-3.5 px-4 text-xs font-medium">
-                    <div className="flex items-center gap-1 text-foreground">
-                      <Clock className="size-3.5 text-muted-foreground" />
-                      {pasien.jamMinum.slice(0, 5)} WIB
-                    </div>
-                  </td>
-
-                  {/* Progres Pengobatan */}
-                  <td className="py-3.5 px-4">
-                    <div className="text-xs font-semibold text-foreground">
-                      Hari ke-{pasien.progres.hariKe} dari {pasien.durasiHari}
-                    </div>
-                    <div className="w-28 bg-muted rounded-full h-1.5 mt-1.5 overflow-hidden">
-                      <div
-                        className="bg-primary h-1.5 rounded-full transition-all duration-300"
-                        style={{ width: `${pasien.progres.persen}%` }}
-                      />
-                    </div>
-                    <span className="text-[10px] text-muted-foreground">
-                      {pasien.progres.persen}% selesai
-                    </span>
-                  </td>
-
-                  {/* Bukti Check-in Hari Ini */}
-                  <td className="py-3.5 px-4">
-                    {checkin ? (
-                      <div className="space-y-1">
-                        <span
-                          className={`inline-block px-2 py-0.5 rounded text-[11px] font-semibold ${
-                            checkin.status === "terverifikasi"
-                              ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
-                              : checkin.status === "ditolak"
-                              ? "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300"
-                              : "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
-                          }`}
-                        >
-                          {checkin.status === "menunggu"
-                            ? "Menunggu Verifikasi"
-                            : checkin.status === "terverifikasi"
-                            ? "Terverifikasi Valid"
-                            : "Bukti Ditolak"}
-                        </span>
-                        <div className="text-[10px] text-muted-foreground">
-                          {new Date(checkin.createdAt).toLocaleTimeString("id-ID", {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}{" "}
-                          WIB
-                        </div>
-                      </div>
+                  <td className={cn(gayaSel, "border-l whitespace-nowrap")}>
+                    {pasien.checkinHariIni ? (
+                      jamWIBDari(pasien.checkinHariIni.createdAt)
                     ) : (
-                      <span className="text-xs text-muted-foreground italic">
-                        Belum check-in
-                      </span>
+                      <span className="text-muted-foreground">Belum check-in</span>
                     )}
                   </td>
-
-                  {/* Riwayat Keluhan Efek Samping */}
-                  <td className="py-3.5 px-4 max-w-xs">
-                    {pasien.riwayatEfekSamping && pasien.riwayatEfekSamping.length > 0 ? (
-                      <div className="space-y-1">
-                        {pasien.riwayatEfekSamping.slice(0, 2).map((efek) => (
-                          <div
-                            key={efek.id}
-                            className="text-[11px] leading-tight flex items-start gap-1"
-                          >
-                            <span
-                              className={`px-1.5 py-0.2 rounded font-semibold text-[9px] uppercase shrink-0 ${
-                                efek.tingkat === "berat"
-                                  ? "bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300"
-                                  : efek.tingkat === "sedang"
-                                  ? "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300"
-                                  : "bg-muted text-muted-foreground"
-                              }`}
-                            >
-                              {efek.tingkat}
-                            </span>
-                            <span className="truncate" title={efek.catatan || efek.jenis}>
-                              {efek.jenis}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">-</span>
-                    )}
-                  </td>
-
-                  {/* Tombol Aksi */}
-                  <td className="py-3.5 px-4 text-right">
-                    <div className="flex items-center justify-end gap-1.5">
-                      {checkin ? (
-                        <Button
-                          variant="outline"
-                          size="xs"
-                          onClick={() => onBukaVerifikasi(pasien)}
-                          className="flex items-center gap-1 text-xs"
-                        >
-                          <FileVideo className="size-3.5 text-primary" />
-                          Tinjau Bukti
-                        </Button>
-                      ) : null}
-
-                      <Button
-                        variant={pasien.status === "merah" ? "destructive" : "secondary"}
-                        size="xs"
-                        onClick={() => onBukaTindakLanjut(pasien)}
-                        className="flex items-center gap-1 text-xs"
-                      >
-                        <ClipboardPen className="size-3.5" />
-                        Tindak Lanjut
-                      </Button>
-                    </div>
+                  <td className={cn(gayaSel, "border-l py-2")}>
+                    <TagStatus pasien={pasien} />
                   </td>
                 </tr>
               );
             })}
           </tbody>
         </table>
+      </div>
+
+      {/* Paginasi */}
+      <div className="flex h-[58px] items-center justify-end gap-4 px-2 text-sm leading-[18px] text-black/[0.87] sm:gap-8">
+        <label className="flex items-center gap-3">
+          <span className="hidden sm:inline">Baris per halaman:</span>
+          <select
+            value={barisPerHalaman}
+            onChange={(e) => onGantiBarisPerHalaman(Number(e.target.value))}
+            className="border-b border-black/40 bg-transparent py-1 pr-1 outline-none focus-visible:border-brand-500"
+          >
+            {PILIHAN_BARIS.map((n) => (
+              <option key={n} value={n}>
+                {n}
+              </option>
+            ))}
+          </select>
+        </label>
+        <span>
+          {awal + 1}-{Math.min(awal + barisPerHalaman, total)} dari {total}
+        </span>
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => onGantiHalaman(halamanAman - 1)}
+            disabled={halamanAman <= 1}
+            aria-label="Halaman sebelumnya"
+            className="flex size-8 items-center justify-center rounded-full text-black/[0.54] transition hover:bg-muted disabled:text-black/20 disabled:hover:bg-transparent"
+          >
+            <ChevronLeft className="size-5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => onGantiHalaman(halamanAman + 1)}
+            disabled={halamanAman >= jumlahHalaman}
+            aria-label="Halaman berikutnya"
+            className="flex size-8 items-center justify-center rounded-full text-black/[0.54] transition hover:bg-muted disabled:text-black/20 disabled:hover:bg-transparent"
+          >
+            <ChevronRight className="size-5" />
+          </button>
+        </div>
       </div>
     </div>
   );

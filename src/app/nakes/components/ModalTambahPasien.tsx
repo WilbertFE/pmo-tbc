@@ -60,12 +60,12 @@ export function ModalTambahPasien({ onClose, onSuksesTambah }: ModalTambahPasien
         role="dialog"
         aria-modal="true"
         aria-labelledby="judul-tambah-pasien"
-        className="relative w-full max-w-lg bg-background rounded-2xl shadow-2xl border overflow-hidden flex flex-col max-h-[90vh]"
+        className="relative w-full max-w-lg bg-background rounded-md shadow-[0px_6px_18px_0px_rgba(0,0,0,0.12)] border border-[#d4d4d8] overflow-hidden flex flex-col max-h-[90vh]"
       >
         {/* Header Modal */}
         <div className="flex items-center justify-between p-4 border-b">
           <div>
-            <h3 id="judul-tambah-pasien" className="font-semibold text-lg flex items-center gap-2">
+            <h3 id="judul-tambah-pasien" className="text-xl leading-6 font-medium flex items-center gap-2">
               <UserPlus className="size-5 text-primary" />
               Tambah Pasien
             </h3>
@@ -167,7 +167,7 @@ export function ModalTambahPasien({ onClose, onSuksesTambah }: ModalTambahPasien
             </div>
 
             {pesanError && (
-              <div role="alert" className="p-2.5 rounded-lg bg-red-500/10 text-red-600 text-xs flex items-center gap-2">
+              <div role="alert" className="p-2.5 rounded-lg bg-alert-subtle text-[#b3261e] text-xs flex items-center gap-2">
                 <AlertTriangle className="size-4 shrink-0" />
                 <span>{pesanError}</span>
               </div>

@@ -194,10 +194,10 @@ export default async function ProgresPage() {
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Efek Samping Terakhir</CardTitle>
           <Link
-            href="/pasien/laporan"
+            href="/pasien/efek-samping"
             className="text-xs text-primary hover:underline"
           >
-            Lapor baru
+            Lapor efek samping
           </Link>
         </CardHeader>
         <CardContent>

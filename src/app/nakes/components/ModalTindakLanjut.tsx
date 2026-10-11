@@ -57,18 +57,18 @@ export function ModalTindakLanjut({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
-      <div className="relative w-full max-w-lg bg-background rounded-2xl shadow-2xl border overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="relative w-full max-w-lg bg-background rounded-md shadow-[0px_6px_18px_0px_rgba(0,0,0,0.12)] border border-[#d4d4d8] overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header Modal */}
         <div className="flex items-center justify-between p-4 border-b">
           <div>
-            <h3 className="font-semibold text-lg flex items-center gap-2">
+            <h3 className="text-xl leading-6 font-medium flex items-center gap-2">
               <ClipboardList className="size-5 text-primary" />
               Catatan Tindak Lanjut
             </h3>
             <p className="text-xs text-muted-foreground mt-0.5">
               Pasien: <span className="font-medium text-foreground">{pasien.nama}</span> | Status:{" "}
               <span className={`font-semibold uppercase ${
-                pasien.status === "merah" ? "text-red-600" : pasien.status === "kuning" ? "text-amber-600" : "text-emerald-600"
+                pasien.status === "merah" ? "text-alert" : pasien.status === "kuning" ? "text-[#9a5b00]" : "text-[#0b7a5a]"
               }`}>
                 {pasien.status}
               </span>
@@ -98,12 +98,12 @@ export function ModalTindakLanjut({
                 value={catatan}
                 onChange={(e) => setCatatan(e.target.value)}
                 required
-                className="w-full mt-1.5 p-3 text-sm rounded-xl border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+                className="w-full mt-1.5 p-3 text-sm rounded-md border border-transparent bg-muted focus:outline-none focus:ring-3 focus:ring-ring/50 resize-none"
               />
             </div>
 
             {pesanError && (
-              <div className="p-2.5 rounded-lg bg-red-500/10 text-red-600 text-xs flex items-center gap-2">
+              <div className="p-2.5 rounded-lg bg-alert-subtle text-[#b3261e] text-xs flex items-center gap-2">
                 <AlertTriangle className="size-4 shrink-0" />
                 <span>{pesanError}</span>
               </div>
@@ -134,7 +134,7 @@ export function ModalTindakLanjut({
                 {pasien.riwayatTindakLanjut.map((item) => (
                   <div
                     key={item.id}
-                    className="p-3 rounded-lg bg-muted/40 border text-xs space-y-1"
+                    className="p-3 rounded-md bg-muted text-xs space-y-1"
                   >
                     <div className="flex items-center justify-between text-muted-foreground text-[11px]">
                       <span>Petugas Puskesmas</span>
@@ -155,7 +155,7 @@ export function ModalTindakLanjut({
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-muted-foreground italic py-2 text-center bg-muted/20 rounded-lg">
+              <p className="text-xs text-muted-foreground italic py-2 text-center bg-muted rounded-md">
                 Belum ada catatan tindak lanjut sebelumnya untuk pasien ini.
               </p>
             )}

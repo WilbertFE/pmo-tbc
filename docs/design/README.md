@@ -212,12 +212,19 @@ Untuk `/nakes` (Programmer 3). Desktop 1440 x 908:
 
 Versi mobile: [`nakes-02-dashboard-mobile.png`](nakes-02-dashboard-mobile.png). Isinya masih template hotel utuh, jadi hanya dipakai sebagai acuan tata letak (header dengan tombol Menu, tabel yang bisa digeser ke samping, grafik di bawah).
 
-**Yang berbeda dari aplikasi:**
-- Kode dashboard sudah dibuat di `src/app/nakes/` dengan tampilan sendiri. Sesuaikan tampilannya saja (warna, tipografi, badge), jangan ditulis ulang dari nol.
-- Pasien merah selalu di urutan teratas (`AGENTS.md` bagian 7).
-- Panel detail di aplikasi berisi pemutar video atau foto check-in (signed URL), tombol "Verifikasi" dan "Tolak", serta catatan tindak lanjut. Bukan Edit dan Delete.
-- Grafik kepatuhan belum ada di kode. Ini opsional, bukan MVP.
-- Semua teks harus Bahasa Indonesia, misalnya "Pemantauan Pasien", bukan "Patient Monitoring".
+**Status:** sudah dibuat sesuai desain di `src/app/nakes/` (sidebar, tabel, tag status, panel detail, grafik).
+
+**Keputusan yang berbeda dari desain:**
+- Semua teks Bahasa Indonesia: "Pemantauan Pasien", "Menu Utama", "Alat", "Baris per halaman".
+- Sidebar hanya berisi menu yang benar-benar berfungsi: Pemantauan Pasien, Tingkat Kepatuhan (lompat ke grafik), Tambah Pasien, Perbarui Data, dan kartu akun dengan tombol Keluar. Menu template (Order, Customer, Summary) tidak dipakai.
+- Toolbar: "Menunggu Verifikasi" (filter cepat), "Perbarui", dan "Tambah Pasien" menggantikan Table View, Filter, Sort, dan Assign Room.
+- Empat kartu ringkasan (Total, Perhatian Segera, Perlu Pemantauan, Terkendali) ditambahkan di bawah judul, sekaligus sebagai filter status. Tidak ada di Figma, tapi dibutuhkan untuk memindai status dengan cepat.
+- Tabel: kolom Nama Pasien (dengan nama PMO), Progres, Waktu Check-in, Status Hari Ini. Pasien merah selalu di atas. Klik baris untuk membuka detail.
+- Label tag status: "Terlewat 2 Hari", "Efek Samping Berat" (merah), "Terlambat Minum Obat", "Efek Samping Sedang" (kuning), "Sudah Minum Obat" (hijau), "Belum Jadwal Minum" (abu-abu).
+- Panel detail kanan berisi status dan alasannya, check-in hari ini beserta status verifikasi, jadwal minum, progres, PMO, tanggal mulai, efek samping 3 hari terakhir, serta tombol "Tinjau Bukti" dan "Tindak Lanjut" (bukan Edit dan Delete).
+- Grafik menampilkan persentase pasien yang check-in per hari selama 14 hari terakhir, bukan "tepat waktu", karena data demo tidak punya waktu check-in yang realistis. Data dari `GET /api/nakes/kepatuhan`.
+- Di bawah 1280 px panel detail pindah ke bawah tabel. Di bawah 1024 px sidebar diganti bar atas, dan pencarian pindah ke toolbar.
+- Catatan aksesibilitas: teks putih di atas tag kuning dan hijau kontrasnya rendah (sekitar 2:1). Tetap mengikuti desain, tapi pertimbangkan teks gelap bila juri menyoroti aksesibilitas.
 
 ---
 

@@ -1,169 +1,82 @@
 "use client";
 
-import React from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Users, AlertTriangle, AlertCircle, CheckCircle2, RotateCw, LogOut, UserPlus } from "lucide-react";
+import { HeartPulse, LogOut } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { tanggalWIB } from "@/lib/tanggal";
+import { tanggalPanjang } from "./status-tampilan";
 import type { RingkasanDashboard } from "./types";
 
 interface HeaderNakesProps {
-  namaNakes: string;
   ringkasan: RingkasanDashboard;
-  onRefresh: () => void;
-  isLoading: boolean;
   filterAktif: string;
   onPilihFilter: (filter: string) => void;
-  onTambahPasien: () => void;
 }
 
-export function HeaderNakes({
-  namaNakes,
-  ringkasan,
-  onRefresh,
-  isLoading,
-  filterAktif,
-  onPilihFilter,
-  onTambahPasien,
-}: HeaderNakesProps) {
-  return (
-    <header className="space-y-4">
-      {/* Baris Atas: Profil & Aksi */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-2 border-b">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
-              Petugas Nakes
-            </span>
-            <span className="text-xs text-muted-foreground">Puskesmas Pemantau</span>
-          </div>
-          <h1 className="text-2xl font-bold tracking-tight mt-1">
-            Dashboard Pemantauan Pasien
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Selamat bertugas, <span className="font-medium text-foreground">{namaNakes}</span>. Pantau kepatuhan minum obat secara real-time.
-          </p>
-        </div>
+const KARTU = [
+  { id: "semua", label: "Total Pasien", kunci: "total", titik: "bg-muted-foreground", keterangan: "Dalam pendampingan" },
+  { id: "merah", label: "Perhatian Segera", kunci: "merah", titik: "bg-alert", keterangan: "Prioritas tertinggi" },
+  { id: "kuning", label: "Perlu Pemantauan", kunci: "kuning", titik: "bg-warning", keterangan: "Terlambat atau ada keluhan" },
+  { id: "hijau", label: "Terkendali", kunci: "hijau", titik: "bg-success", keterangan: "Sesuai jadwal" },
+] as const;
 
-        <div className="flex items-center gap-2">
-          <Button size="sm" onClick={onTambahPasien} className="flex items-center gap-1.5">
-            <UserPlus className="size-4" />
-            Tambah Pasien
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onRefresh}
-            disabled={isLoading}
-            className="flex items-center gap-1.5"
-          >
-            <RotateCw className={`size-4 ${isLoading ? "animate-spin" : ""}`} />
-            Perbarui Data
-          </Button>
-          <form action="/api/auth/logout" method="post">
-            <Button variant="ghost" size="sm" type="submit" className="text-muted-foreground hover:text-destructive">
-              <LogOut className="size-4 mr-1" />
-              Keluar
-            </Button>
-          </form>
+// Bar atas khusus layar kecil (sidebar hanya tampil di desktop)
+export function BarAtasNakes() {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-sm bg-white/90 p-2.5 shadow-[0px_2px_6px_0px_rgba(0,0,0,0.06)] lg:hidden">
+      <div className="flex items-center gap-2.5">
+        <span className="flex size-10 items-center justify-center rounded-sm bg-brand-500 text-white">
+          <HeartPulse aria-hidden className="size-5" />
+        </span>
+        <p className="text-sm leading-[18px] text-foreground">Portal Nakes</p>
+      </div>
+      <form action="/api/auth/logout" method="post">
+        <button
+          type="submit"
+          className="flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-sm text-muted-foreground transition hover:bg-alert-subtle hover:text-alert"
+        >
+          <LogOut aria-hidden className="size-4" />
+          Keluar
+        </button>
+      </form>
+    </div>
+  );
+}
+
+// Judul halaman dan ringkasan status. Kartu ringkasan juga berfungsi sebagai filter.
+export function HeaderNakes({ ringkasan, filterAktif, onPilihFilter }: HeaderNakesProps) {
+  return (
+    <header className="flex flex-col gap-5">
+      <div className="flex flex-col gap-5">
+        <div className="flex flex-wrap items-end justify-between gap-2">
+          <h1 className="text-2xl leading-8 font-medium text-foreground">Pemantauan Pasien</h1>
+          <p className="text-sm leading-[18px] text-muted-foreground">{tanggalPanjang(tanggalWIB())}</p>
         </div>
+        <div className="h-px bg-border" />
       </div>
 
-      {/* Baris Metrik / Ringkasan Prioritas */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {/* Total Pasien */}
-        <Card
-          size="sm"
-          onClick={() => onPilihFilter("semua")}
-          className={`cursor-pointer transition hover:border-primary/50 ${
-            filterAktif === "semua" ? "ring-2 ring-primary" : ""
-          }`}
-        >
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <p className="text-xs text-muted-foreground font-medium">Total Pasien</p>
-              <h2 className="text-2xl font-bold mt-0.5">{ringkasan.total}</h2>
-              <span className="text-[11px] text-muted-foreground">Dalam pendampingan</span>
-            </div>
-            <div className="p-2.5 rounded-xl bg-muted text-muted-foreground">
-              <Users className="size-5" />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Perlu Perhatian Segera (Merah) */}
-        <Card
-          size="sm"
-          onClick={() => onPilihFilter("merah")}
-          className={`cursor-pointer transition hover:border-red-500/50 ${
-            filterAktif === "merah" ? "ring-2 ring-red-600 bg-red-500/5" : ""
-          }`}
-        >
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="size-2 rounded-full bg-red-600 animate-pulse" />
-                <p className="text-xs text-red-600 dark:text-red-400 font-semibold">Perhatian Segera</p>
-              </div>
-              <h2 className="text-2xl font-bold text-red-600 dark:text-red-400 mt-0.5">
-                {ringkasan.merah}
-              </h2>
-              <span className="text-[11px] text-red-600/80 dark:text-red-400/80 font-medium">
-                Prioritas tertinggi
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        {KARTU.map((kartu) => {
+          const aktif = filterAktif === kartu.id;
+          return (
+            <button
+              key={kartu.id}
+              type="button"
+              onClick={() => onPilihFilter(kartu.id)}
+              aria-pressed={aktif}
+              className={cn(
+                "flex flex-col items-start gap-1 rounded-md border border-[#d4d4d8] bg-white px-4 py-3 text-left transition hover:border-brand-300 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none",
+                aktif && "border-brand-500 bg-brand-50",
+              )}
+            >
+              <span className="flex items-center gap-2 text-xs leading-4 text-muted-foreground">
+                <span aria-hidden className={cn("size-1.5 rounded-full", kartu.titik)} />
+                {kartu.label}
               </span>
-            </div>
-            <div className="p-2.5 rounded-xl bg-red-100 dark:bg-red-950/60 text-red-600 dark:text-red-400">
-              <AlertCircle className="size-5" />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Perlu Pemantauan (Kuning) */}
-        <Card
-          size="sm"
-          onClick={() => onPilihFilter("kuning")}
-          className={`cursor-pointer transition hover:border-amber-500/50 ${
-            filterAktif === "kuning" ? "ring-2 ring-amber-500 bg-amber-500/5" : ""
-          }`}
-        >
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <p className="text-xs text-amber-600 dark:text-amber-400 font-semibold">Perlu Pemantauan</p>
-              <h2 className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-0.5">
-                {ringkasan.kuning}
-              </h2>
-              <span className="text-[11px] text-amber-600/80 dark:text-amber-400/80 font-medium">
-                Terlambat / ada keluhan
-              </span>
-            </div>
-            <div className="p-2.5 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400">
-              <AlertTriangle className="size-5" />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Terkendali (Hijau) */}
-        <Card
-          size="sm"
-          onClick={() => onPilihFilter("hijau")}
-          className={`cursor-pointer transition hover:border-emerald-500/50 ${
-            filterAktif === "hijau" ? "ring-2 ring-emerald-600 bg-emerald-500/5" : ""
-          }`}
-        >
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <p className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">Terkendali</p>
-              <h2 className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">
-                {ringkasan.hijau}
-              </h2>
-              <span className="text-[11px] text-emerald-600/80 dark:text-emerald-400/80 font-medium">
-                Sesuai jadwal
-              </span>
-            </div>
-            <div className="p-2.5 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400">
-              <CheckCircle2 className="size-5" />
-            </div>
-          </CardContent>
-        </Card>
+              <span className="text-2xl leading-8 font-medium text-foreground">{ringkasan[kartu.kunci]}</span>
+              <span className="text-xs leading-4 text-muted-foreground">{kartu.keterangan}</span>
+            </button>
+          );
+        })}
       </div>
     </header>
   );

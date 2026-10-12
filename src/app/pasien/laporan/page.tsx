@@ -35,13 +35,15 @@ export default async function LaporanPage() {
     .eq("pasien_id", pasien.id)
     .order("tanggal", { ascending: true });
 
-  // Cek apakah sudah check-in hari ini
-  const sudahCheckinHariIni = checkins?.some((c) => c.tanggal === hariIni) ?? false;
+  // Cek apakah sudah check-in hari ini. Bukti yang ditolak harus dikirim ulang.
+  const checkinHariIni = checkins?.find((c) => c.tanggal === hariIni);
+  const buktiDitolak = checkinHariIni?.status === "ditolak";
+  const sudahCheckinHariIni = !!checkinHariIni && !buktiDitolak;
 
   // Hitung streak
   let streak = 0;
   if (checkins && checkins.length > 0) {
-    const checkinSet = new Set(checkins.map((c) => c.tanggal));
+    const checkinSet = new Set(checkins.filter((c) => c.status !== "ditolak").map((c) => c.tanggal));
     let cursor = hariIni;
     if (!checkinSet.has(cursor)) {
       cursor = tambahHari(cursor, -1);
@@ -89,7 +91,7 @@ export default async function LaporanPage() {
                   </span>
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  -{sisaHari} Hari
+                  {sisaHari > 0 ? `${sisaHari} hari lagi` : "Hari terakhir"}
                 </span>
               </CardContent>
             </Card>
@@ -106,7 +108,7 @@ export default async function LaporanPage() {
                   </span>
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  {sudahCheckinHariIni ? "+1 today" : "Belum hari ini"}
+                  {sudahCheckinHariIni ? "Termasuk hari ini" : "Belum hari ini"}
                 </span>
               </CardContent>
             </Card>
@@ -126,6 +128,13 @@ export default async function LaporanPage() {
                 Lengkapi form ini sebagai bukti bahwa kamu telah meminum obat.
               </p>
             </div>
+
+            {buktiDitolak && (
+              <p className="mb-6 rounded-xl border border-alert/30 bg-alert-subtle px-4 py-3 text-sm text-[#b3261e]">
+                Bukti check-in hari ini belum bisa diterima petugas. Silakan kirim ulang video atau foto
+                yang lebih jelas.
+              </p>
+            )}
 
             <FormCheckin
               pasienId={pasien.id}

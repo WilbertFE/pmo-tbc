@@ -21,6 +21,78 @@ const TINGGI = 220;
 const PAD = { atas: 12, bawah: 8, kiri: 40, kanan: 12 };
 const GRID = [0, 50, 100];
 
+// Menghasilkan path SVG kurva mulus (smooth cubic bezier) dan area di bawah kurva.
+// Menggunakan interpolasi cubic monotone agar kurva luwes dan tidak melengkung melebihi batas plot.
+function hitungKurvaMulus(
+  titikSegmen: { x: number; y: number | null }[],
+  dasarY: number,
+  batasAtas: number,
+): { garis: string; area: string } {
+  const titikValid = titikSegmen.filter(
+    (t): t is { x: number; y: number } => t.y !== null,
+  );
+  const n = titikValid.length;
+  if (n === 0) return { garis: "", area: "" };
+
+  if (n === 1) {
+    const p = titikValid[0];
+    return {
+      garis: `M ${p.x.toFixed(2)},${p.y.toFixed(2)}`,
+      area: "",
+    };
+  }
+
+  if (n === 2) {
+    const p0 = titikValid[0];
+    const p1 = titikValid[1];
+    const garis = `M ${p0.x.toFixed(2)},${p0.y.toFixed(2)} L ${p1.x.toFixed(2)},${p1.y.toFixed(2)}`;
+    const area = `${garis} L ${p1.x.toFixed(2)},${dasarY} L ${p0.x.toFixed(2)},${dasarY} Z`;
+    return { garis, area };
+  }
+
+  const dxs: number[] = [];
+  const deltas: number[] = [];
+  for (let i = 0; i < n - 1; i++) {
+    const dx = titikValid[i + 1].x - titikValid[i].x;
+    dxs.push(dx);
+    deltas.push(dx === 0 ? 0 : (titikValid[i + 1].y - titikValid[i].y) / dx);
+  }
+
+  const m: number[] = new Array(n).fill(0);
+  m[0] = deltas[0];
+  m[n - 1] = deltas[n - 2];
+  for (let i = 1; i < n - 1; i++) {
+    const d0 = deltas[i - 1];
+    const d1 = deltas[i];
+    if (d0 * d1 <= 0) {
+      m[i] = 0;
+    } else {
+      m[i] = (2 * d0 * d1) / (d0 + d1);
+    }
+  }
+
+  let dGaris = `M ${titikValid[0].x.toFixed(2)},${titikValid[0].y.toFixed(2)}`;
+  for (let i = 0; i < n - 1; i++) {
+    const p0 = titikValid[i];
+    const p1 = titikValid[i + 1];
+    const dx = dxs[i];
+
+    const cp1x = p0.x + dx / 3;
+    const cp1y = Math.min(dasarY, Math.max(batasAtas, p0.y + (m[i] * dx) / 3));
+
+    const cp2x = p1.x - dx / 3;
+    const cp2y = Math.min(dasarY, Math.max(batasAtas, p1.y - (m[i + 1] * dx) / 3));
+
+    dGaris += ` C ${cp1x.toFixed(2)},${cp1y.toFixed(2)} ${cp2x.toFixed(2)},${cp2y.toFixed(2)} ${p1.x.toFixed(2)},${p1.y.toFixed(2)}`;
+  }
+
+  const pPertama = titikValid[0];
+  const pTerakhir = titikValid[n - 1];
+  const dArea = `${dGaris} L ${pTerakhir.x.toFixed(2)},${dasarY} L ${pPertama.x.toFixed(2)},${dasarY} Z`;
+
+  return { garis: dGaris, area: dArea };
+}
+
 // Grafik area satu seri: persentase pasien yang check-in per hari (14 hari terakhir).
 // Hover atau tombol panah kiri/kanan menampilkan nilai per hari.
 export function GrafikKepatuhan({ data, isLoading }: GrafikKepatuhanProps) {
@@ -66,6 +138,11 @@ export function GrafikKepatuhan({ data, isLoading }: GrafikKepatuhanProps) {
   }, [titik]);
 
   const dasarY = PAD.atas + tinggiPlot;
+
+  const kurvaSegmen = useMemo(
+    () => segmen.map((s) => hitungKurvaMulus(s, dasarY, PAD.atas)),
+    [segmen, dasarY],
+  );
   const adaData = data.some((d) => d.persen !== null);
   const rataRata = adaData
     ? Math.round(
@@ -172,23 +249,19 @@ export function GrafikKepatuhan({ data, isLoading }: GrafikKepatuhanProps) {
                   );
                 })}
 
-                {segmen.map((s, i) => {
-                  const garis = s.map((t, j) => `${j ? "L" : "M"}${t.x},${t.y}`).join(" ");
-                  const area = `${garis} L${s[s.length - 1].x},${dasarY} L${s[0].x},${dasarY} Z`;
-                  return (
-                    <g key={i}>
-                      <path d={area} fill="url(#isi-kepatuhan)" />
-                      <path
-                        d={garis}
-                        fill="none"
-                        stroke="var(--primary)"
-                        strokeWidth={2}
-                        strokeLinejoin="round"
-                        strokeLinecap="round"
-                      />
-                    </g>
-                  );
-                })}
+                {kurvaSegmen.map((kurva, i) => (
+                  <g key={i}>
+                    {kurva.area && <path d={kurva.area} fill="url(#isi-kepatuhan)" />}
+                    <path
+                      d={kurva.garis}
+                      fill="none"
+                      stroke="var(--primary)"
+                      strokeWidth={2}
+                      strokeLinejoin="round"
+                      strokeLinecap="round"
+                    />
+                  </g>
+                ))}
 
                 {titikAktif && (
                   <g pointerEvents="none">

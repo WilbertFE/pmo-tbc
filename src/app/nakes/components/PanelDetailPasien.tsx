@@ -36,6 +36,12 @@ const GAYA_VERIFIKASI: Record<string, string> = {
   menunggu: "bg-info-subtle text-[#1f6fa8]",
 };
 
+const LABEL_RIWAYAT: Record<"menunggu" | "terverifikasi" | "ditolak", string> = {
+  menunggu: "Menunggu",
+  terverifikasi: "Terverifikasi",
+  ditolak: "Ditolak",
+};
+
 // Tanggal 7 hari terakhir yang termasuk masa pengobatan, terbaru di atas
 function hariRiwayat(pasien: PasienNakes) {
   const hariIni = tanggalWIB();
@@ -86,7 +92,7 @@ export function PanelDetailPasien({ pasien, onBukaVerifikasi, onBukaTindakLanjut
                 {tanggalPendek(tanggalWIB())} ({jamWIBDari(checkin.createdAt)})
                 <span
                   className={cn(
-                    "mt-1 block w-fit rounded-full px-2 text-xs leading-5",
+                    "mt-1 block w-fit rounded-full px-2 text-xs leading-5 whitespace-nowrap",
                     checkin.status === "terverifikasi" && "bg-success-subtle text-[#0b7a5a]",
                     checkin.status === "ditolak" && "bg-alert-subtle text-[#b3261e]",
                     checkin.status === "menunggu" && "bg-info-subtle text-[#1f6fa8]",
@@ -144,28 +150,38 @@ export function PanelDetailPasien({ pasien, onBukaVerifikasi, onBukaTindakLanjut
 
       <div className="flex flex-col gap-2 px-2">
         <p className="text-xs leading-4 text-muted-foreground">Riwayat 7 Hari</p>
-        <ul className="flex flex-col gap-1">
+        <ul className="flex flex-col gap-1.5">
           {hariRiwayat(pasien).map((tgl) => {
             const item = pasien.riwayatCheckin.find((c) => c.tanggal === tgl);
             return (
-              <li key={tgl} className="flex items-center justify-between gap-2 text-sm leading-[18px]">
-                <span className="w-20 shrink-0 text-foreground">{tanggalPendek(tgl)}</span>
-                {item ? (
-                  <>
-                    <span className={cn("rounded-full px-2 text-xs leading-5", GAYA_VERIFIKASI[item.status])}>
-                      {LABEL_VERIFIKASI[item.status]}
+              <li key={tgl} className="grid grid-cols-[72px_1fr_auto] items-center gap-1.5 text-xs leading-[18px]">
+                <span className="shrink-0 text-foreground">{tanggalPendek(tgl)}</span>
+                <div className="flex min-w-0 items-center justify-start">
+                  {item ? (
+                    <span
+                      title={LABEL_VERIFIKASI[item.status]}
+                      className={cn(
+                        "rounded-full px-2 text-[11px] leading-5 font-medium whitespace-nowrap",
+                        GAYA_VERIFIKASI[item.status],
+                      )}
+                    >
+                      {LABEL_RIWAYAT[item.status]}
                     </span>
+                  ) : (
+                    <span className="text-muted-foreground whitespace-nowrap">Tidak check-in</span>
+                  )}
+                </div>
+                <div className="w-12 shrink-0 text-right">
+                  {item && (
                     <button
                       type="button"
                       onClick={() => onBukaVerifikasi(pasien, item)}
-                      className="ml-auto rounded-md px-2 py-1 text-xs font-medium text-primary hover:bg-brand-50 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+                      className="rounded-md px-1.5 py-0.5 text-xs font-medium text-primary hover:bg-brand-50 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
                     >
                       Tinjau
                     </button>
-                  </>
-                ) : (
-                  <span className="mr-auto text-xs text-muted-foreground">Tidak check-in</span>
-                )}
+                  )}
+                </div>
               </li>
             );
           })}

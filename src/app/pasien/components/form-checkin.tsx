@@ -1,9 +1,12 @@
 "use client";
 
 import { useState, useRef, type ChangeEvent, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
+import { Camera, ImageUp, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
+import PerekamVideo from "./perekam-video";
 
 type FormCheckinProps = {
   pasienId: string;
@@ -13,7 +16,9 @@ type FormCheckinProps = {
 
 const MAKS_UKURAN_MB = 50;
 const MAKS_UKURAN_BYTES = MAKS_UKURAN_MB * 1024 * 1024;
-const EKSTENSI_VALID = ["mp4", "webm", "mov", "jpg", "jpeg", "png", "heic"];
+// Harus sama dengan allowed_mime_types bucket checkin-media (migrasi 004)
+const EKSTENSI_VALID = ["mp4", "webm", "mov", "jpg", "jpeg", "png", "webp"];
+const TIPE_FILE_DITERIMA = "video/mp4,video/webm,video/quicktime,image/jpeg,image/png,image/webp";
 
 export default function FormCheckin({
   pasienId,
@@ -28,12 +33,18 @@ export default function FormCheckin({
     tipe: "sukses" | "error";
     teks: string;
   } | null>(null);
+  const [merekam, setMerekam] = useState(false);
+  const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
+  const fotoRef = useRef<HTMLInputElement>(null);
 
   function handleFileChange(e: ChangeEvent<HTMLInputElement>) {
     const selected = e.target.files?.[0];
     if (!selected) return;
+    pilihFile(selected);
+  }
 
+  function pilihFile(selected: File) {
     // Validasi ukuran
     if (selected.size > MAKS_UKURAN_BYTES) {
       setPesan({
@@ -45,6 +56,13 @@ export default function FormCheckin({
 
     // Validasi ekstensi
     const ext = selected.name.split(".").pop()?.toLowerCase() ?? "";
+    if (ext === "heic" || ext === "heif") {
+      setPesan({
+        tipe: "error",
+        teks: "Foto HEIC belum didukung. Pakai tombol Ambil Foto atau Rekam Video di atas.",
+      });
+      return;
+    }
     if (!EKSTENSI_VALID.includes(ext)) {
       setPesan({
         tipe: "error",
@@ -55,22 +73,17 @@ export default function FormCheckin({
 
     setFile(selected);
     setPesan(null);
-
-    // Preview untuk gambar
-    if (selected.type.startsWith("image/")) {
-      const url = URL.createObjectURL(selected);
-      setPreview(url);
-    } else {
-      setPreview(null);
-    }
+    setMerekam(false);
+    if (preview) URL.revokeObjectURL(preview);
+    setPreview(URL.createObjectURL(selected));
   }
 
   function handleRemoveFile() {
+    if (preview) URL.revokeObjectURL(preview);
     setFile(null);
     setPreview(null);
-    if (inputRef.current) {
-      inputRef.current.value = "";
-    }
+    if (inputRef.current) inputRef.current.value = "";
+    if (fotoRef.current) fotoRef.current.value = "";
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -133,9 +146,10 @@ export default function FormCheckin({
       setCatatan("");
       if (inputRef.current) inputRef.current.value = "";
 
-      // Refresh halaman untuk menampilkan data terbaru
+      // Kembali ke beranda yang menampilkan status dan progres terbaru
       setTimeout(() => {
-        window.location.reload();
+        router.push("/pasien");
+        router.refresh();
       }, 1500);
     } catch (err) {
       setPesan({
@@ -184,88 +198,68 @@ export default function FormCheckin({
       {/* Upload Bukti */}
       <div className="flex flex-col gap-2">
         <Label className="text-base font-semibold">Bukti Minum Obat</Label>
-        <p className="text-sm text-muted-foreground">Upload Bukti</p>
-        <div
-          className="group relative flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-border bg-muted/30 px-4 py-8 transition-colors hover:border-primary/40 hover:bg-muted/50"
-          onClick={() => inputRef.current?.click()}
-        >
-          {file ? (
-            <div className="flex w-full flex-col items-center gap-3">
-              {preview ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={preview}
-                  alt="Preview bukti"
-                  className="h-32 w-auto rounded-lg object-cover"
-                />
-              ) : (
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-                  <svg
-                    className="h-8 w-8 text-primary"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25h-9A2.25 2.25 0 0 0 2.25 7.5v9a2.25 2.25 0 0 0 2.25 2.25Z"
-                    />
-                  </svg>
-                </div>
-              )}
-              <div className="text-center">
-                <p className="text-sm font-medium">{file.name}</p>
-                <p className="text-xs text-muted-foreground">
-                  {(file.size / (1024 * 1024)).toFixed(1)} MB
-                </p>
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleRemoveFile();
-                }}
-              >
-                Ganti File
-              </Button>
-            </div>
-          ) : (
-            <>
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted transition-colors group-hover:bg-primary/10">
-                <svg
-                  className="h-6 w-6 text-muted-foreground transition-colors group-hover:text-primary"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={1.5}
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25h-9A2.25 2.25 0 0 0 2.25 7.5v9a2.25 2.25 0 0 0 2.25 2.25Z"
-                  />
-                </svg>
-              </div>
-              <p className="mt-2 text-sm font-medium text-muted-foreground">
-                Upload Video atau Foto
-              </p>
-              <p className="text-xs text-muted-foreground">
-                MP4, WebM, MOV, JPG, PNG (maks {MAKS_UKURAN_MB} MB)
-              </p>
-            </>
-          )}
-          <input
-            ref={inputRef}
-            type="file"
-            accept="video/*,image/*"
-            onChange={handleFileChange}
-            className="hidden"
-          />
-        </div>
+        <p className="text-sm text-muted-foreground">
+          Rekam video singkat atau ambil foto saat minum obat.
+        </p>
+
+        {merekam ? (
+          <PerekamVideo onPakai={pilihFile} onBatal={() => setMerekam(false)} />
+        ) : file && preview ? (
+          <div className="flex flex-col items-center gap-3 rounded-xl border bg-muted/30 p-4">
+            {file.type.startsWith("video/") ? (
+              <video src={preview} controls playsInline className="max-h-64 w-full rounded-lg bg-black" />
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={preview} alt="Pratinjau bukti" className="max-h-64 w-auto rounded-lg object-contain" />
+            )}
+            <p className="text-xs text-muted-foreground">
+              {(file.size / (1024 * 1024)).toFixed(1)} MB
+            </p>
+            <Button type="button" variant="outline" onClick={handleRemoveFile}>
+              Ganti bukti
+            </Button>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            <Button type="button" className="h-14 w-full text-lg" onClick={() => setMerekam(true)}>
+              <Video aria-hidden className="size-6" />
+              Rekam Video
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="h-14 w-full text-lg"
+              onClick={() => fotoRef.current?.click()}
+            >
+              <Camera aria-hidden className="size-6" />
+              Ambil Foto
+            </Button>
+            <button
+              type="button"
+              onClick={() => inputRef.current?.click()}
+              className="mx-auto flex items-center gap-2 py-2 text-sm text-muted-foreground underline-offset-4 hover:underline"
+            >
+              <ImageUp aria-hidden className="size-4" />
+              Pilih dari galeri (MP4, WebM, MOV, JPG, PNG, maks {MAKS_UKURAN_MB} MB)
+            </button>
+          </div>
+        )}
+
+        <input
+          ref={fotoRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          capture="user"
+          onChange={handleFileChange}
+          className="hidden"
+        />
+        <input
+          ref={inputRef}
+          type="file"
+          accept={TIPE_FILE_DITERIMA}
+          onChange={handleFileChange}
+          className="hidden"
+        />
       </div>
 
       {/* Keluhan / Catatan */}

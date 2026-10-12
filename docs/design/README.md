@@ -212,6 +212,12 @@ Untuk `/pasien` (Programmer 2). Isi desain:
 - Progress dihitung dengan `hitungProgres()` di `src/lib/progres.ts`. Streak bisa dihitung dari riwayat `checkin`.
 - Desain ini satu halaman desktop. Pasien memakai ponsel dan bisa jadi lansia: buat mobile-first, tombol besar, satu aksi utama per layar. Contohnya, layar status hari ini, lalu layar rekam, lalu layar konfirmasi.
 
+**Status:** alurnya dibagi jadi beberapa halaman dengan kerangka bersama di `src/app/pasien/layout.tsx` (header dengan tombol Keluar, menu bawah di ponsel, menu teks di desktop):
+- `/pasien`: beranda dengan status hari ini (belum, terkirim, diperiksa, perlu kirim ulang), tombol besar "Check-in sekarang", progres singkat, dan tautan lapor keluhan.
+- `/pasien/laporan`: form check-in sesuai desain. Bukti bisa direkam langsung (video kamera depan, berhenti otomatis setelah 15 detik, `perekam-video.tsx`), diambil sebagai foto, atau dipilih dari galeri. Bukti yang ditolak nakes bisa dikirim ulang.
+- `/pasien/progress` dan `/pasien/efek-samping`: progres lengkap dan laporan keluhan.
+- Format file mengikuti bucket `checkin-media`: mp4, webm, mov, jpg, png, webp. Foto HEIC ditolak dengan pesan yang jelas.
+
 ### Dashboard nakes: [`nakes-01-dashboard.png`](nakes-01-dashboard.png)
 
 Untuk `/nakes` (Programmer 3). Desktop 1440 x 908:

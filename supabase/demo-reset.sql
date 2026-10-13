@@ -6,10 +6,12 @@
 -- Status dihitung dari jam minum obat, jadi lakukan demo SETELAH pukul 09.00 WIB.
 -- Sebelum jam itu, pasien yang belum check-in belum terhitung terlambat.
 --
--- Hasil (dihitung dari hari ini WIB):
---   Pak Budi   : rutin check-in, hari ini sudah check-in (menunggu verifikasi) -> hijau
---   Bu Wati    : 2 hari terakhir tidak check-in -> merah
---   Pak Joko   : check-in sampai kemarin, efek samping sedang kemarin -> kuning
+-- Hasil (dihitung dari hari ini WIB), status hari ini dan skor risiko putus obat 14 hari:
+--   Pak Budi   : rutin check-in, hari ini sudah check-in (menunggu verifikasi) -> hijau, risiko rendah
+--   Bu Wati    : 2 hari terakhir tidak check-in, bukti 3 hari lalu ditolak, sering bolong dan
+--                check-in terlambat -> merah, risiko tinggi
+--   Pak Joko   : check-in sampai kemarin, efek samping sedang kemarin, beberapa hari bolong dan
+--                satu bukti ditolak -> kuning, risiko sedang
 --   Bu Rina    : pasien milik nakes kedua (nakes2@demo.id), tidak terlihat oleh Bu Sari
 --
 -- Akun baru dari skrip ini (password demo1234):
@@ -76,22 +78,28 @@ where pasien_id in (
 
 -- 3. Check-in 14 hari terakhir (supaya grafik kepatuhan juga terisi)
 --    mulai_n = hari terakhir check-in dihitung mundur dari hari ini (0 = hari ini)
---    lompat = hari yang sengaja dikosongkan agar grafik tidak rata 100%
+--    lompat  = hari yang sengaja dikosongkan agar grafik tidak rata 100%
+--    ditolak = hari yang buktinya ditolak nakes (dihitung bolong oleh skor risiko)
+--    jam     = jam unggah pertama; Bu Wati sengaja terlambat lebih dari 2 jam dari jadwal 07.00
 with hari_ini as (select (now() at time zone 'Asia/Jakarta')::date as tgl),
-rencana (pasien_id, mulai_n, lompat) as (
+rencana (pasien_id, mulai_n, lompat, ditolak, jam) as (
   values
-    ('aaaaaaaa-0000-4000-8000-000000000001'::uuid, 0, array[9]),
-    ('aaaaaaaa-0000-4000-8000-000000000002'::uuid, 2, array[6, 11]),
-    ('aaaaaaaa-0000-4000-8000-000000000003'::uuid, 1, array[4]),
-    ('aaaaaaaa-0000-4000-8000-000000000004'::uuid, 0, array[]::int[])
+    ('aaaaaaaa-0000-4000-8000-000000000001'::uuid, 0, array[9], array[]::int[], time '07:00'),
+    ('aaaaaaaa-0000-4000-8000-000000000002'::uuid, 3, array[5, 6, 8, 10, 11, 13], array[3], time '10:30'),
+    ('aaaaaaaa-0000-4000-8000-000000000003'::uuid, 1, array[4, 9, 12], array[7], time '07:00'),
+    ('aaaaaaaa-0000-4000-8000-000000000004'::uuid, 0, array[]::int[], array[]::int[], time '07:00')
 )
 insert into public.checkin (pasien_id, tanggal, status, created_at)
 select
   r.pasien_id,
   h.tgl - g.n,
-  case when g.n = 0 then 'menunggu' else 'terverifikasi' end,
-  -- Jam unggah realistis: sekitar jam minum obat (07.00 sampai 08.30 WIB)
-  ((h.tgl - g.n) + time '07:00' + (g.n % 4) * interval '20 minutes') at time zone 'Asia/Jakarta'
+  case
+    when g.n = any (r.ditolak) then 'ditolak'
+    when g.n = 0 then 'menunggu'
+    else 'terverifikasi'
+  end,
+  -- Jam unggah bervariasi sampai satu jam setelah jam pertama
+  ((h.tgl - g.n) + r.jam + (g.n % 4) * interval '20 minutes') at time zone 'Asia/Jakarta'
 from hari_ini h
 cross join rencana r
 cross join generate_series(0, 13) as g (n)

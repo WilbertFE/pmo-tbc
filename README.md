@@ -95,7 +95,7 @@ Pendaftaran mandiri (form `/daftar` atau Google) selalu menjadi peran `pasien`. 
 
 Menghubungkan akun baru ke data pengobatan: nakes membuka dashboard `/nakes`, klik **Tambah Pasien**, isi email pasien (dan opsional email PMO), tanggal mulai, jam minum, dan durasi. Pasien dan PMO harus sudah mendaftar dulu. Akun PMO otomatis berubah peran menjadi `pmo`. Fitur ini butuh migrasi `007_hubungkan_pasien.sql`.
 
-**Menyiapkan data untuk presentasi:** jalankan `supabase/demo-reset.sql` di SQL Editor pada hari demo (lakukan demo setelah pukul 09.00 WIB). Skrip ini menyusun ulang check-in 14 hari terakhir dan efek samping pasien demo supaya ada pasien merah, kuning, dan hijau, lalu menambahkan nakes kedua (`nakes2@demo.id`) beserta pasiennya untuk menunjukkan bahwa nakes tidak bisa melihat pasien nakes lain.
+**Menyiapkan data untuk presentasi:** jalankan `supabase/demo-reset.sql` di SQL Editor pada hari demo (lakukan demo setelah pukul 09.00 WIB). Skrip ini menyusun ulang check-in 14 hari terakhir dan efek samping pasien demo supaya ada pasien merah, kuning, dan hijau, serta skor risiko putus obat rendah (Pak Budi), sedang (Pak Joko), dan tinggi (Bu Wati), lalu menambahkan nakes kedua (`nakes2@demo.id`) beserta pasiennya untuk menunjukkan bahwa nakes tidak bisa melihat pasien nakes lain.
 
 **Akun demo** (password semua: `demo1234`)
 

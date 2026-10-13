@@ -14,6 +14,7 @@ import {
 } from "./status-tampilan";
 import type { CheckinDitinjau } from "./ModalVerifikasi";
 import type { PasienNakes } from "./types";
+import type { LevelRisiko } from "@/lib/risiko-putus-obat";
 
 interface PanelDetailPasienProps {
   pasien: PasienNakes | null;
@@ -34,6 +35,20 @@ const GAYA_VERIFIKASI: Record<string, string> = {
   terverifikasi: "bg-success-subtle text-[#0b7a5a]",
   ditolak: "bg-alert-subtle text-[#b3261e]",
   menunggu: "bg-info-subtle text-[#1f6fa8]",
+};
+
+const LABEL_RISIKO: Record<LevelRisiko, string> = { rendah: "Rendah", sedang: "Sedang", tinggi: "Tinggi" };
+
+const GAYA_RISIKO: Record<LevelRisiko, string> = {
+  rendah: "bg-success-subtle text-[#0b7a5a]",
+  sedang: "bg-warning-subtle text-[#9a5b00]",
+  tinggi: "bg-alert-subtle text-[#b3261e]",
+};
+
+const WARNA_BAR_RISIKO: Record<LevelRisiko, string> = {
+  rendah: "bg-success",
+  sedang: "bg-warning",
+  tinggi: "bg-alert",
 };
 
 const LABEL_RIWAYAT: Record<"menunggu" | "terverifikasi" | "ditolak", string> = {
@@ -144,6 +159,49 @@ export function PanelDetailPasien({ pasien, onBukaVerifikasi, onBukaTindakLanjut
             <span className="text-muted-foreground">Tidak ada keluhan</span>
           )}
         </Info>
+      </div>
+
+      <div className="h-px bg-border" />
+
+      <div className="flex flex-col gap-2 px-2">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-xs leading-4 text-muted-foreground">Risiko Putus Obat (14 hari)</p>
+          {pasien.risiko.dataCukup && (
+            <span
+              className={cn("rounded-full px-2 text-[11px] leading-5 font-medium", GAYA_RISIKO[pasien.risiko.level])}
+            >
+              {LABEL_RISIKO[pasien.risiko.level]} · {pasien.risiko.skor}/100
+            </span>
+          )}
+        </div>
+        {pasien.risiko.dataCukup ? (
+          <>
+            <div
+              role="meter"
+              aria-label="Skor risiko putus obat"
+              aria-valuenow={pasien.risiko.skor}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              className="h-1.5 overflow-hidden rounded-full bg-muted"
+            >
+              <div
+                className={cn("h-full rounded-full", WARNA_BAR_RISIKO[pasien.risiko.level])}
+                style={{ width: `${Math.max(pasien.risiko.skor, 2)}%` }}
+              />
+            </div>
+            {pasien.risiko.faktor.length > 0 ? (
+              <ul className="flex list-disc flex-col gap-0.5 pl-4 text-xs leading-4 text-muted-foreground">
+                {pasien.risiko.faktor.slice(0, 4).map((f) => (
+                  <li key={f.alasan}>{f.alasan}</li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-xs leading-4 text-muted-foreground">Rutin dan tepat waktu, tidak ada tanda risiko.</p>
+            )}
+          </>
+        ) : (
+          <p className="text-xs leading-4 text-muted-foreground">Data belum cukup (pengobatan baru dimulai).</p>
+        )}
       </div>
 
       <div className="h-px bg-border" />

@@ -1,5 +1,6 @@
 import type { StatusPeringatan } from "@/lib/status-pasien";
 import type { Progres } from "@/lib/progres";
+import type { HasilRisiko } from "@/lib/risiko-putus-obat";
 
 export type StatusCheckin = "menunggu" | "terverifikasi" | "ditolak";
 
@@ -47,6 +48,7 @@ export interface PasienNakes {
   alasanStatus: string[];
   keteranganStatus: string;
   checkinHariIni: CheckinHariIni | null;
+  risiko: HasilRisiko;
   riwayatCheckin: RiwayatCheckin[];
   riwayatEfekSamping: ItemEfekSamping[];
   riwayatTindakLanjut: ItemTindakLanjut[];

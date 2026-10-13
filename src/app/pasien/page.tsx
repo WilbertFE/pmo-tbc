@@ -1,6 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CalendarCheck, CircleAlert, CircleCheck, Clock, Stethoscope, TrendingUp } from "lucide-react";
+import {
+  CalendarCheck,
+  CircleAlert,
+  CircleCheck,
+  Clock,
+  MessageCircleQuestion,
+  Stethoscope,
+  TrendingUp,
+} from "lucide-react";
 import { getPasienSaya } from "@/lib/auth";
 import { hitungProgres } from "@/lib/progres";
 import { jamWIB, tanggalWIB } from "@/lib/tanggal";
@@ -149,6 +157,20 @@ export default async function BerandaPasienPage() {
         <div>
           <p className="text-lg font-semibold">Ada keluhan setelah minum obat?</p>
           <p className="text-sm text-muted-foreground">Laporkan ke petugas kesehatan</p>
+        </div>
+      </Link>
+
+      {/* Tanya jawab dengan asisten AI */}
+      <Link
+        href="/pasien/tanya"
+        className="flex items-center gap-4 rounded-xl border bg-background p-5 transition hover:bg-muted/50"
+      >
+        <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-info-subtle text-info">
+          <MessageCircleQuestion aria-hidden className="size-6" />
+        </span>
+        <div>
+          <p className="text-lg font-semibold">Punya pertanyaan soal obat?</p>
+          <p className="text-sm text-muted-foreground">Tanyakan ke asisten, dijawab langsung</p>
         </div>
       </Link>
     </main>

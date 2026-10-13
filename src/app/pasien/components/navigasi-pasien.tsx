@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Camera, House, Stethoscope, TrendingUp } from "lucide-react";
+import { Camera, House, MessageCircleQuestion, Stethoscope, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const MENU = [
@@ -10,6 +10,7 @@ const MENU = [
   { href: "/pasien/laporan", label: "Check-in", ikon: Camera },
   { href: "/pasien/progress", label: "Progres", ikon: TrendingUp },
   { href: "/pasien/efek-samping", label: "Keluhan", ikon: Stethoscope },
+  { href: "/pasien/tanya", label: "Tanya", ikon: MessageCircleQuestion },
 ];
 
 function aktif(pathname: string, href: string) {
@@ -48,7 +49,7 @@ export function MenuBawahPasien() {
       aria-label="Menu utama"
       className="fixed inset-x-0 bottom-0 z-40 border-t bg-background pb-[env(safe-area-inset-bottom)] md:hidden"
     >
-      <ul className="mx-auto grid max-w-md grid-cols-4">
+      <ul className="mx-auto grid max-w-md grid-cols-5">
         {MENU.map(({ href, label, ikon: Ikon }) => (
           <li key={href}>
             <Link

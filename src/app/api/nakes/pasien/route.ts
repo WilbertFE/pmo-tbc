@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { tanggalWIB, tambahHari } from "@/lib/tanggal";
 import { hitungProgres } from "@/lib/progres";
 import { tentukanStatusPasien, urutkanPrioritasPasien } from "@/lib/status-pasien";
+import { hitungRisikoPutusObat, JENDELA_HARI } from "@/lib/risiko-putus-obat";
 
 export async function GET() {
   const supabase = await createClient();
@@ -58,24 +59,26 @@ export async function GET() {
   const tigaHariLalu = tambahHari(hariIni, -3);
   // Riwayat check-in 7 hari untuk ditinjau nakes (termasuk yang belum sempat diverifikasi)
   const enamHariLalu = tambahHari(hariIni, -6);
+  // Skor risiko putus obat menilai 14 hari terakhir
+  const awalJendelaRisiko = tambahHari(hariIni, -JENDELA_HARI);
 
   const pasienIds = daftarPasien.map((p) => p.id);
 
-  // Ambil check-in 7 hari terakhir untuk semua pasien
+  // Ambil check-in 14 hari terakhir untuk semua pasien
   const { data: checkinList } = await supabase
     .from("checkin")
     .select("id, pasien_id, tanggal, media_path, status, created_at")
     .in("pasien_id", pasienIds)
-    .gte("tanggal", enamHariLalu)
+    .gte("tanggal", awalJendelaRisiko)
     .lte("tanggal", hariIni)
     .order("tanggal", { ascending: false });
 
-  // Ambil efek samping dalam rentang 3-7 hari terakhir
+  // Ambil efek samping 14 hari terakhir (panel detail tetap menampilkan 3 hari terakhir)
   const { data: efekSampingList } = await supabase
     .from("efek_samping")
     .select("id, pasien_id, jenis, tingkat, catatan, created_at")
     .in("pasien_id", pasienIds)
-    .gte("created_at", `${tigaHariLalu}T00:00:00+07:00`)
+    .gte("created_at", `${awalJendelaRisiko}T00:00:00+07:00`)
     .order("created_at", { ascending: false });
 
   // Ambil catatan tindak lanjut terbaru untuk pasien
@@ -127,6 +130,17 @@ export async function GET() {
       // Hitung progres pengobatan
       const progres = hitungProgres(pasien.tanggal_mulai, pasien.durasi_hari, hariIni);
 
+      const checkinPasien = (checkinList || []).filter((c) => c.pasien_id === pasien.id);
+
+      const risiko = hitungRisikoPutusObat({
+        tanggalHariIni: hariIni,
+        tanggalMulai: pasien.tanggal_mulai,
+        durasiHari: pasien.durasi_hari,
+        jamMinum: pasien.jam_minum,
+        checkin: checkinPasien.map((c) => ({ tanggal: c.tanggal, status: c.status, createdAt: c.created_at })),
+        efekSamping: daftarEfekSampingRingkas,
+      });
+
       // Buat signed URL jika ada media_path pada check-in hari ini
       let signedMediaUrl: string | null = null;
       if (checkinHariIni?.media_path) {
@@ -162,8 +176,9 @@ export async function GET() {
               createdAt: checkinHariIni.created_at,
             }
           : null,
-        riwayatCheckin: (checkinList || [])
-          .filter((c) => c.pasien_id === pasien.id)
+        risiko,
+        riwayatCheckin: checkinPasien
+          .filter((c) => c.tanggal >= enamHariLalu)
           .map((c) => ({
             id: c.id,
             tanggal: c.tanggal,
@@ -171,7 +186,9 @@ export async function GET() {
             mediaPath: c.media_path,
             createdAt: c.created_at,
           })),
-        riwayatEfekSamping: efekSampingPasien,
+        riwayatEfekSamping: efekSampingPasien.filter(
+          (e) => tanggalWIB(new Date(e.created_at || new Date().toISOString())) >= tigaHariLalu,
+        ),
         riwayatTindakLanjut: tindakLanjutPasien,
       };
     }),

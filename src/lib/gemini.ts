@@ -3,6 +3,8 @@ import { GoogleGenAI } from "@google/genai";
 // Hanya untuk kode server (API route). Kunci tidak boleh sampai ke browser.
 // Model cepat dan hemat untuk chat; ganti di sini kalau perlu model lain.
 export const MODEL_CHAT = "gemini-3.5-flash-lite";
+// Model yang lebih teliti untuk menilai video dan foto bukti check-in
+export const MODEL_VISI = "gemini-3.8-flash";
 
 let client: GoogleGenAI | null = null;
 

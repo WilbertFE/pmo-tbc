@@ -5,6 +5,7 @@
 export type Peran = "pasien" | "pmo" | "nakes";
 export type StatusCheckin = "menunggu" | "terverifikasi" | "ditolak";
 export type TingkatEfekSamping = "ringan" | "sedang" | "berat";
+export type SaranCekAi = "kemungkinan_valid" | "perlu_dicek" | "kemungkinan_tidak_valid";
 
 export type Database = {
   public: {
@@ -188,6 +189,61 @@ export type Database = {
             columns: ["nakes_id"];
             isOneToOne: false;
             referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      // Migrasi 008: hasil cek awal bukti check-in oleh AI, hanya bisa diakses nakes
+      cek_ai_checkin: {
+        Row: {
+          checkin_id: string;
+          pasien_id: string;
+          media_path: string;
+          saran: SaranCekAi;
+          wajah_terlihat: boolean;
+          obat_terlihat: boolean;
+          menelan_terlihat: boolean;
+          alasan: string;
+          model: string;
+          created_at: string;
+        };
+        Insert: {
+          checkin_id: string;
+          pasien_id: string;
+          media_path: string;
+          saran: SaranCekAi;
+          wajah_terlihat: boolean;
+          obat_terlihat: boolean;
+          menelan_terlihat: boolean;
+          alasan: string;
+          model: string;
+          created_at?: string;
+        };
+        Update: {
+          checkin_id?: string;
+          pasien_id?: string;
+          media_path?: string;
+          saran?: SaranCekAi;
+          wajah_terlihat?: boolean;
+          obat_terlihat?: boolean;
+          menelan_terlihat?: boolean;
+          alasan?: string;
+          model?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "cek_ai_checkin_checkin_id_fkey";
+            columns: ["checkin_id"];
+            isOneToOne: true;
+            referencedRelation: "checkin";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "cek_ai_checkin_pasien_id_fkey";
+            columns: ["pasien_id"];
+            isOneToOne: false;
+            referencedRelation: "pasien";
             referencedColumns: ["id"];
           },
         ];

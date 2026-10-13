@@ -213,6 +213,7 @@ Full schema in `supabase/migrations/`. Table and column names are in Bahasa Indo
 | `checkin` | `id`, `pasien_id`, `tanggal`, `media_path`, `status`, `created_at` | `status`: `menunggu`, `terverifikasi`, `ditolak` |
 | `efek_samping` | `id`, `pasien_id`, `jenis`, `tingkat`, `catatan`, `created_at` | `tingkat`: `ringan`, `sedang`, `berat` |
 | `tindak_lanjut` | `id`, `pasien_id`, `nakes_id`, `catatan`, `created_at` | Nakes follow-up notes |
+| `cek_ai_checkin` | `checkin_id`, `pasien_id`, `media_path`, `saran`, `wajah_terlihat`, `obat_terlihat`, `menelan_terlihat`, `alasan` | AI pre-check of check-in media, nakes only. `saran`: `kemungkinan_valid`, `perlu_dicek`, `kemungkinan_tidak_valid` |
 
 Progress: `hari_ke = (today in WIB - tanggal_mulai) + 1`, capped at `durasi_hari`.
 
@@ -242,7 +243,7 @@ New schema changes: always a **new** numbered migration file (`003_...sql`), nev
 
 ## 9. Out of scope (do not build unless explicitly asked)
 
-- Computer vision verification that the patient actually swallowed the medicine. Nakes verify manually.
+- Automatic verification that the patient actually swallowed the medicine. Nakes always decide. The only AI on check-in media is the advisory pre-check in `src/lib/cek-bukti-ai.ts` (result stored in `cek_ai_checkin`, readable only by nakes); it must never change `checkin.status`.
 - Integration with SITB or any government system.
 - Native Android/iOS apps. The patient app is a mobile-friendly web app.
 - WhatsApp Business API integration.

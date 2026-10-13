@@ -6,6 +6,7 @@ import { Check, X, AlertTriangle, ShieldCheck, Clock, FileVideo, LoaderCircle } 
 import type { PasienNakes, RiwayatCheckin } from "./types";
 import { jamWIBDari, LABEL_VERIFIKASI, tanggalPendek } from "./status-tampilan";
 import { useTutupDenganEsc } from "./useTutupDenganEsc";
+import { KartuCekAi } from "./KartuCekAi";
 
 export type CheckinDitinjau = RiwayatCheckin & { signedMediaUrl?: string | null };
 
@@ -147,6 +148,8 @@ export function ModalVerifikasi({ pasien, checkin, onClose, onSuksesVerifikasi }
               </span>
             </div>
           </div>
+
+          {checkin.mediaPath && <KartuCekAi checkinId={checkin.id} />}
 
           {pesanError && (
             <div role="alert" className="p-3 rounded-lg bg-alert-subtle text-[#b3261e] text-xs flex items-center gap-2">

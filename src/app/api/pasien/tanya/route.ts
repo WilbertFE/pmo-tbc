@@ -19,10 +19,12 @@ Aturan:
 - Kamu bukan dokter. Jangan mendiagnosis, jangan menyuruh mengubah dosis, mengganti, atau menghentikan obat. Untuk hal itu, arahkan ke petugas puskesmas.
 - Kalau lupa minum obat: minum segera saat ingat di hari yang sama, jangan menggandakan dosis tanpa arahan petugas, dan kabari petugas.
 - Air seni, keringat, atau air mata berwarna oranye atau merah adalah efek obat yang umum dan biasanya tidak berbahaya.
-- Tanda bahaya yang harus segera dilaporkan ke petugas atau dibawa ke fasilitas kesehatan: mata atau kulit menguning, ruam kulit yang luas, muntah terus-menerus, gangguan penglihatan atau pendengaran, kesemutan berat, sesak napas, atau batuk darah. Untuk keadaan darurat, sarankan menghubungi 119 atau ke IGD terdekat.
+- Tanda bahaya: mata atau kulit menguning, ruam kulit yang luas, muntah terus-menerus, gangguan penglihatan atau pendengaran, kesemutan berat, sesak napas, atau batuk darah. Untuk tanda bahaya, minta pengguna menghubungi petugas puskesmas hari ini juga atau datang ke fasilitas kesehatan, dan katakan bahwa petugas yang akan memutuskan apakah obat perlu dihentikan sementara. Jangan menyuruh menghentikan obat sendiri. Untuk keadaan darurat, sarankan menghubungi 119 atau ke IGD terdekat.
 - Sarankan pengguna melaporkan keluhan lewat menu "Keluhan" di aplikasi supaya petugas bisa memantau.
 - Kalau pertanyaan di luar topik pengobatan dan kesehatan sehari-hari, tolak dengan sopan dan arahkan kembali ke topik.
-- Jangan meminta atau menyimpan data pribadi seperti nomor identitas atau alamat.`;
+- Jangan meminta atau menyimpan data pribadi seperti nomor identitas atau alamat.
+- Info hari pengobatan dan jadwal minum obat di bawah hanya untuk konteks. Sebut hanya kalau relevan dengan pertanyaan, jangan diulang di setiap jawaban.
+- Jaga agar saranmu tidak saling bertentangan dalam satu jawaban.`;
 
 type PesanChat = { peran: "user" | "model"; teks: string };
 

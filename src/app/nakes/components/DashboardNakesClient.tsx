@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import { BarAtasNakes, HeaderNakes } from "./HeaderNakes";
 import { SidebarNakes } from "./SidebarNakes";
@@ -156,20 +157,32 @@ export function DashboardNakesClient() {
   // Langganan Supabase Realtime (AGENTS.md bagian 6, pengecualian 2)
   useEffect(() => {
     const supabase = createClient();
+    let channel: RealtimeChannel | null = null;
+    let batal = false;
 
-    const channel = supabase
-      .channel("nakes-dashboard-realtime")
-      .on("postgres_changes", { event: "*", schema: "public", table: "checkin" }, () => {
-        muatData();
-      })
-      .on("postgres_changes", { event: "*", schema: "public", table: "efek_samping" }, () => {
-        muatData();
-      })
-      .subscribe();
+    (async () => {
+      // Realtime harus memakai token sesi nakes. Tanpa token, koneksi dianggap anonim
+      // dan RLS menyaring semua event checkin, sehingga dashboard tidak pernah diperbarui.
+      const { data } = await supabase.auth.getSession();
+      if (batal) return;
+      await supabase.realtime.setAuth(data.session?.access_token ?? null);
+      if (batal) return;
+
+      channel = supabase
+        .channel("nakes-dashboard-realtime")
+        .on("postgres_changes", { event: "*", schema: "public", table: "checkin" }, () => {
+          muatData();
+        })
+        .on("postgres_changes", { event: "*", schema: "public", table: "efek_samping" }, () => {
+          muatData();
+        })
+        .subscribe();
+    })();
 
     // Wajib: bersihkan channel saat unmount
     return () => {
-      supabase.removeChannel(channel);
+      batal = true;
+      if (channel) supabase.removeChannel(channel);
     };
   }, [muatData]);
 

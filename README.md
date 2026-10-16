@@ -4,7 +4,7 @@
 
 Sistem pemantauan minum obat dua arah untuk pasien tuberkulosis (TBC): **pasien dan PMO** melakukan check-in harian dengan video atau foto, sementara **nakes puskesmas** memantau, memverifikasi, dan menindaklanjuti pasien yang berisiko putus obat lewat dashboard real-time.
 
-**Demo:** https://pmo-tbc.vercel.app/ · **Video:** https://youtu.be/o43DOxu3Hg0 · **Pitch deck:** https://www.figma.com/design/s8HkBLFfeVzoQ8XqhSRJ81/Pitchdeck-Joints-UGM-2026--Copy-
+**Demo:** https://pmo-tbc.vercel.app/ · **Video:** https://youtu.be/o43DOxu3Hg0 · **Pitch deck dan proposal:** https://drive.google.com/drive/folders/1w2g5z0szI631qO2XIO6VFb80cckvh6Nu
 
 ---
 

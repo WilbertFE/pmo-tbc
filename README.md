@@ -4,7 +4,7 @@
 
 Sistem pemantauan minum obat dua arah untuk pasien tuberkulosis (TBC): **pasien dan PMO** melakukan check-in harian dengan video atau foto, sementara **nakes puskesmas** memantau, memverifikasi, dan menindaklanjuti pasien yang berisiko putus obat lewat dashboard real-time.
 
-**Demo:** https://pmo-tbc.vercel.app/ · **Video:** _(isi link)_ · **Pitch deck:** _(isi link)_
+**Demo:** https://pmo-tbc.vercel.app/ · **Video:** https://youtu.be/o43DOxu3Hg0 · **Pitch deck dan proposal:** https://drive.google.com/drive/folders/1w2g5z0szI631qO2XIO6VFb80cckvh6Nu
 
 ---
 
@@ -199,12 +199,14 @@ docs/design/                  → referensi desain dari Figma
 
 ## Tim
 
+Tim "ga ada saran nama tim? @all", Institut Teknologi Sepuluh Nopember.
+
 | Peran | Nama | GitHub |
 | --- | --- | --- |
-| Kapten · backend, database, integrasi | Wilbert Bernardi | [@WilbertFE](https://github.com/WilbertFE) |
-| Programmer · aplikasi pasien | Fatihul Ihsan Ramadhan | [@mvfflin](https://github.com/mvfflin) |
-| Programmer · dashboard nakes | Wangsa | [@wangggsa](https://github.com/wangggsa) |
-| Desainer UI/UX | _(isi)_ | _(isi)_ |
+| Ketua dan programmer · backend, database, integrasi | Wilbert Bernardi | [@WilbertFE](https://github.com/WilbertFE) |
+| Programmer · aplikasi pasien | Fatih Ihsan Ramadhan | [@mvfflin](https://github.com/mvfflin) |
+| Programmer · dashboard nakes | Hanif Ardhito Narawangsa | [@wangggsa](https://github.com/wangggsa) |
+| Desainer UI/UX dan pitch deck | Muhammad Keefa Syawal | - |
 
 ## Transparansi penggunaan AI
 
@@ -221,8 +223,7 @@ Sesuai ketentuan lomba, penggunaan AI kami cantumkan secara terbuka.
 
 | Alat | Digunakan untuk |
 | --- | --- |
-| Claude (Claude Code) | Riset masalah, perencanaan, penulisan dan review kode, pengujian di browser, dokumentasi |
-| _(tambahkan)_ | _(tambahkan)_ |
+| Claude (Claude Code) | Riset masalah, perencanaan, penulisan dan review kode, pengujian di browser, dokumentasi, penyusunan proposal, revisi pitch deck, serta perekaman dan penyuntingan video demo (narasi direkam sendiri oleh tim) |
 
 Seluruh kode hasil bantuan AI direview oleh anggota tim sebelum di-merge.
 
